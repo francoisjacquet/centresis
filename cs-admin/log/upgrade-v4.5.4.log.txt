@@ -1,0 +1,4 @@
+Updates: 
+11/13/2014
+o Fixes re-enrollment on dropped students - modules/Students/includes/Enrollment.inc.php
+o Fixes credit_attempted cannot be null on modules/Grades/InputFinalGrades.php

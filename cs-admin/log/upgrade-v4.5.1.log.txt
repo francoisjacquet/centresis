@@ -1,0 +1,5 @@
+Fixed Portal not showing with Parents.
+
+1. Add/Overwrite the following files:
+/modules/misc/Portal.php
+

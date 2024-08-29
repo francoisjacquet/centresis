@@ -1,0 +1,16 @@
+Moved parents from "staff" table to "people" table. Updated their active usernames and passwords.
+
+1. Download & extract latest version from C/SIS download link.
+2. IMPORT version4.5.sql file
+
+3. Add/Overwrite the following files:
+/index.php
+/Warehouse.php
+/functions/GetParList.fnc.php (NEW)
+/functions/Inputs.php
+/functions/Search.fnc.php
+/modules/Custom/Menu.php
+/modules/Custom/ParentReport.php
+/modules/Students/SearchParent.inc.php
+/modules/Students/includes/Address.inc.php
+

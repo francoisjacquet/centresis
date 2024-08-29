@@ -1,0 +1,6 @@
+10052013
+Version 4.4
+Added Delete Students module.
+Updated centre-db.sql
+Addition of `student_delete_records` & `admin_notes` tables
+

@@ -1,0 +1,20 @@
+Updates: 
+05/01/2015
+o Added Scheduling/Requests permission to Parents & Students
+
+08/25/2015
+o Small fix; Edit History Marking Periods NEXTVAL()
+
+09/25/2015
+o Quick fix; Recalculate Daily Attendance
+
+10/14/2015
+o Quick fix; GRADES: Calculate GPA by modifying FUNCTION `calc_cum_gpa_mp`
+
+10/16/2015
+o Quick fix; Attendance issue, not pulling up right data and Recalc Daily Attendance not fixing some.
+
+11/12/2015
+o Added Spanish as one of the default languages available
+o Added Password Policy. Applied to Users & Students password fields
+o Changed default Syear into 2015

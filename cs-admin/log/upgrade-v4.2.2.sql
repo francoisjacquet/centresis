@@ -1,0 +1,1 @@
+ALTER TABLE `config` ADD `description` VARCHAR( 175 ) NOT NULL ;

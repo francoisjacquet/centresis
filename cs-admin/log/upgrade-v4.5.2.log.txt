@@ -1,0 +1,5 @@
+Fixed School Marking Periods setup bug.
+
+1. Overwrite the following files:
+/modules/School_Setup/MarkingPeriods.php
+

@@ -1,0 +1,6 @@
+08212013
+Version 4.3
+Fixed `School Setup: Add Periods`
+Fixed `Take Attendance` module
+Updated centre-db.sql
+Added NEW PDF report -- Ethnicity Report

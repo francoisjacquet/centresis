@@ -1,0 +1,12 @@
+Added INDEXES to Food_Service_Transactions table
+
+Updates:
+10/28/2014
+o Parents' listview of assignments (Gradebook)
+modules/Grades/StudentGrades.php
+o Fixes on Input Final Grades "CREDIT_EARNED is null" bug
+
+Updates: 
+11/13/2014
+o Fixes re-enrollment on dropped students - modules/Students/includes/Enrollment.inc.php
+o Fixes credit_attempted cannot be null on modules/Grades/InputFinalGrades.php

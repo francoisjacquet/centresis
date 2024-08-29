@@ -1,0 +1,4 @@
+Updates: 
+08/23/2016
+o Fixed Attendance. Added Position(,0,) OR Position('Y') IN DOES_ATTENDANCE
+o Adjustments on credits and grade fix

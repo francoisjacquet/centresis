@@ -1,0 +1,7 @@
+Updates: 
+02/24/2015
+o Added Scheduling/PrintClassEnrollment or "Average Class Enrollment" report
+o Fixed themes/Modern/stylesheet.css -- Login forms alignment with higher resolutions.
+
+04/09/2015
+o Changed defaultsyear to 2014
