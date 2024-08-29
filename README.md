@@ -1,6 +1,6 @@
 # Centre/SIS Student Information System
 
-Version 4.5.7 (2016) and version 3.0 (2011), see branch 3.0.
+Version 4.5.7 (2016, MySQL) and version 3.1 (2011, PostgreSQL), see branch 3.1.
 
 Centre/SIS is considered a dead project since 2016 and 4.5.7 is the last known version.
 
