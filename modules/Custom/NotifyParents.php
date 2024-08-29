@@ -45,11 +45,11 @@ if($_REQUEST['modfunc']=='save')
 
 	foreach($RET as $staff)
 	{
-		$password = EncryptPWD($passwords[rand(0,count($passwords)-1)]);
-		DBQuery("UPDATE staff SET PASSWORD='$password' WHERE STAFF_ID='$staff[STAFF_ID]'");
+		$password = $passwords[rand(0,count($passwords)-1)];
+		DBQuery("UPDATE STAFF SET PASSWORD='$password' WHERE STAFF_ID='$staff[STAFF_ID]'");
 	}
 
-	$extra['SELECT'] = ",CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS NAME,s.USERNAME,s.PASSWORD,s.EMAIL";
+	$extra['SELECT'] = ",s.FIRST_NAME||' '||s.LAST_NAME AS NAME,s.USERNAME,s.PASSWORD,s.EMAIL";
 	$extra['WHERE'] = " AND s.STAFF_ID IN ($st_list)";
 
 	$RET = GetStaffList($extra);
@@ -60,7 +60,7 @@ if($_REQUEST['modfunc']=='save')
 	{
 		$staff_id = $staff['STAFF_ID'];
 
-		$students_RET = DBGet(DBQuery("SELECT CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS FULL_NAME FROM STUDENTS s,STUDENT_ENROLLMENT sse,STUDENTS_JOIN_USERS sju WHERE sju.STAFF_ID='$staff_id' AND s.STUDENT_ID=sju.STUDENT_ID AND sse.STUDENT_ID=sju.STUDENT_ID AND sse.SYEAR='".UserSyear()."' AND sse.END_DATE IS NULL"));
+		$students_RET = DBGet(DBQuery("SELECT s.FIRST_NAME||' '||s.LAST_NAME AS FULL_NAME FROM STUDENTS s,STUDENT_ENROLLMENT sse,STUDENTS_JOIN_USERS sju WHERE sju.STAFF_ID='$staff_id' AND s.STUDENT_ID=sju.STUDENT_ID AND sse.STUDENT_ID=sju.STUDENT_ID AND sse.SYEAR='".UserSyear()."' AND sse.END_DATE IS NULL"));
 		//echo '<pre>'; var_dump($students_RET); echo '</pre>';
 
 		$student_list = '';

@@ -38,7 +38,7 @@ function getSize()
 	return true;
 }
 </script>
-</HEAD><BODY leftmargin=0 topmargin=4 onload='getSize();'>";
+</HEAD><BODY background=assets/themes/".Preferences('THEME')."/bg.jpg leftmargin=0 topmargin=4 onload='getSize();'>";
 // System Information
 echo '<TABLE cellpadding=0 cellspacing=0 border=0 height=100% width=100%>';
 echo '<TR>';

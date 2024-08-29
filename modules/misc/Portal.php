@@ -5,7 +5,7 @@
 global $CentrePath;
 require_once($CentrePath.'vendors/IXR_Library.inc.php');
 require_once($CentrePath.'vendors/simplepie/simplepie.inc');
-
+ 
 if(!UserSyear())
 {
 	$_SESSION['UserSyear'] = $DefaultSyear;
@@ -18,7 +18,7 @@ if(!UserSyear())
 //}
 
 $_CENTRE['HeaderIcon'] = 'centre.gif';
-DrawHeader(Config('TITLE'),'Centre SIS v'.$CentreVersion);
+DrawHeader(Config('TITLE'),_('Centre SIS').' '.$CentreVersion.'&nbsp;');
 
 DrawHeader('<FONT SIZE=+1><script language="javascript">
 var currentTime = new Date();
@@ -28,18 +28,16 @@ else if (hours < 18) document.write("'.sprintf(_('Good Afternoon, %s.'), User('N
 else document.write("'.sprintf(_('Good Evening, %s.'), User('NAME')).'");</script></FONT>');
 
 $welcome = _('Welcome to the Centre School Information System!');
-
 if($_SESSION['LAST_LOGIN'])
-	$welcome .= '<BR>&nbsp;'.sprintf(_('Your last login was <b>%s</b>.'), ProperDate(substr($_SESSION['LAST_LOGIN'],0,10)).substr($_SESSION['LAST_LOGIN'],10));
+	$welcome .= '<BR>&nbsp;'.sprintf(_('Your last login was <b>%s</b>.'), date('M/d/Y H:i:s', strtotime($_SESSION['LAST_LOGIN'])));
 if($_REQUEST['failed_login'])
 	$welcome .= '<BR>&nbsp;<FONT color=red><b>'._('Warning!').'</b></FONT>&nbsp;'.sprintf(_('There have been <b>%d</b> failed login attempts since your last successful login.'),$_REQUEST['failed_login']);
 switch (User('PROFILE'))
 {
 	case 'admin':
-		//DrawHeader($welcome.'<BR>&nbsp;'._('You are an <b>Administrator</b> on the system.<BR>').PHPCheck().versionCheck());
-		DrawHeader($welcome.'<BR>&nbsp;'._('You are an <b>Administrator</b> on the system.<BR>').PHPCheck());
+		DrawHeader($welcome.'<BR>&nbsp;'._('You are an <b>Administrator</b> on the system.<BR>').PHPCheck().versionCheck());
 
-        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,CONCAT('<B>',pn.TITLE,'</B>') AS TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(pn.SCHOOL_ID IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',admin,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(st.PROFILE_ID IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
+        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,'<B>'||pn.TITLE||'</B>' AS TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(','||pn.SCHOOL_ID||',' IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',admin,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(','||st.PROFILE_ID||',' IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
 
 		if(count($notes_RET))
 		{
@@ -48,7 +46,7 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.DESCRIPTION,ce.SCHOOL_DATE AS SCHOOL_DATE,DATE_FORMAT(ce.SCHOOL_DATE,'%a') AS DAY,s.TITLE AS SCHOOL FROM calendar_events ce,SCHOOLS s,STAFF st WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(ce.SCHOOL_ID IN st.SCHOOLS)>0) AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
+		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.DESCRIPTION,ce.SCHOOL_DATE AS SCHOOL_DATE,to_char(ce.SCHOOL_DATE,'Dy') AS DAY,s.TITLE AS SCHOOL FROM CALENDAR_EVENTS ce,SCHOOLS s,STAFF st WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(','||ce.SCHOOL_ID||',' IN st.SCHOOLS)>0) AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
 
 		if(count($events_RET))
 		{
@@ -57,19 +55,19 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-        //RSSOutput(USER('PROFILE'));
-
+        RSSOutput(USER('PROFILE'));
+        
 		if(Preferences('HIDE_ALERTS')!='Y')
 		{
 		// warn if missing attendances
-		$categories_RET = DBGet(DBQuery("SELECT '0' AS ID,'Attendance' AS TITLE,0,NULL AS SORT_ORDER UNION SELECT ID,TITLE,1,SORT_ORDER FROM attendance_code_categories WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY 3,SORT_ORDER"));
+		$categories_RET = DBGet(DBQuery("SELECT '0' AS ID,'Attendance' AS TITLE,0,NULL AS SORT_ORDER UNION SELECT ID,TITLE,1,SORT_ORDER FROM ATTENDANCE_CODE_CATEGORIES WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY 3,SORT_ORDER"));
 		foreach($categories_RET as $category)
 		{
-			$RET = DBGET(DBQuery("SELECT cp.COURSE_PERIOD_ID,s.TITLE AS SCHOOL,acc.SCHOOL_DATE,cp.TITLE FROM attendance_calendar acc,COURSE_PERIODS cp,SCHOOL_PERIODS sp,SCHOOLS s,STAFF st WHERE acc.SYEAR='".UserSyear()."' AND (acc.MINUTES IS NOT NULL AND acc.MINUTES>0) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(acc.SCHOOL_ID IN st.SCHOOLS)>0) AND cp.SCHOOL_ID=acc.SCHOOL_ID AND cp.SYEAR=acc.SYEAR AND acc.SCHOOL_DATE<'".DBDate()."' AND cp.CALENDAR_ID=acc.CALENDAR_ID
+			$RET = DBGET(DBQuery("SELECT cp.COURSE_PERIOD_ID,s.TITLE AS SCHOOL,acc.SCHOOL_DATE,cp.TITLE FROM ATTENDANCE_CALENDAR acc,COURSE_PERIODS cp,SCHOOL_PERIODS sp,SCHOOLS s,STAFF st WHERE acc.SYEAR='".UserSyear()."' AND (acc.MINUTES IS NOT NULL AND acc.MINUTES>0) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(','||acc.SCHOOL_ID||',' IN st.SCHOOLS)>0) AND cp.SCHOOL_ID=acc.SCHOOL_ID AND cp.SYEAR=acc.SYEAR AND acc.SCHOOL_DATE<'".DBDate()."' AND cp.CALENDAR_ID=acc.CALENDAR_ID
             AND cp.MARKING_PERIOD_ID IN (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='FY' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE UNION SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='SEM' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE UNION SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='QTR' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE)
-		    AND sp.PERIOD_ID=cp.PERIOD_ID AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(DAYOFWEEK(acc.SCHOOL_DATE) AS SIGNED)+1 FOR 1) IN cp.DAYS)>0
+		    AND sp.PERIOD_ID=cp.PERIOD_ID AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(extract(DOW FROM acc.SCHOOL_DATE) AS INT)+1 FOR 1) IN cp.DAYS)>0
 				OR sp.BLOCK IS NOT NULL AND acc.BLOCK IS NOT NULL AND sp.BLOCK=acc.BLOCK)
-			AND NOT exists(SELECT '' FROM attendance_completed ac WHERE ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.STAFF_ID=cp.TEACHER_ID AND ac.PERIOD_ID=cp.PERIOD_ID AND TABLE_NAME='$category[ID]') AND position(',$category[ID],' IN cp.DOES_ATTENDANCE)>0 AND s.ID=acc.SCHOOL_ID AND s.SYEAR=acc.SYEAR ORDER BY cp.TITLE,acc.SCHOOL_DATE"),array('SCHOOL_DATE'=>'ProperDate'),array('COURSE_PERIOD_ID'));
+			AND NOT exists(SELECT '' FROM ATTENDANCE_COMPLETED ac WHERE ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.STAFF_ID=cp.TEACHER_ID AND ac.PERIOD_ID=cp.PERIOD_ID AND TABLE_NAME='$category[ID]') AND position(',$category[ID],' IN cp.DOES_ATTENDANCE)>0 AND s.ID=acc.SCHOOL_ID AND s.SYEAR=acc.SYEAR ORDER BY cp.TITLE,acc.SCHOOL_DATE"),array('SCHOOL_DATE'=>'ProperDate'),array('COURSE_PERIOD_ID'));
 			if (count($RET))
 			{
 				echo '<p><font color=red><b>'._('Warning!').'</b></font> - '.sprintf(Localize('colon',_('Teachers have missing <b>%s</b> attendance data')),$category['TITLE']);
@@ -82,7 +80,7 @@ switch (User('PROFILE'))
 		if($CentreModules['Food_Service'] && Preferences('HIDE_ALERTS')!='Y')
 		{
 		    // warn if negative food service balance
-		    $staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM staff s WHERE s.STAFF_ID='.User('STAFF_ID')));
+		    $staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM STAFF s WHERE s.STAFF_ID='.User('STAFF_ID')));
 		    $staff = $staff[1];
 		    if($staff['BALANCE'] && $staff['BALANCE']<0)
 			    echo '<p><font color=red><b>'._('Warning!').'</b></font> - '.sprintf(_('You have a <b>negative</b> food service balance of <font color=red>%d</font>'),$staff['BALANCE']).'</p>';
@@ -107,7 +105,7 @@ switch (User('PROFILE'))
 	case 'teacher':
 		DrawHeader($welcome.'<BR>&nbsp;'._('You are a <b>Teacher</b> on the system.'));
 
-        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,CONCAT('<B>',pn.TITLE,'</B>') AS TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(pn.SCHOOL_ID IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',teacher,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(st.PROFILE_ID IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
+        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,'<B>'||pn.TITLE||'</B>' AS TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND (st.SCHOOLS IS NULL OR position(','||pn.SCHOOL_ID||',' IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',teacher,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(','||st.PROFILE_ID||',' IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
 
 		if(count($notes_RET))
 		{
@@ -116,7 +114,7 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.DESCRIPTION,ce.SCHOOL_DATE,DATE_FORMAT(ce.SCHOOL_DATE,'%a') AS DAY,s.TITLE AS SCHOOL FROM calendar_events ce,SCHOOLS s WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND position(ce.SCHOOL_ID IN (SELECT SCHOOLS FROM staff WHERE STAFF_ID='".User('STAFF_ID')."'))>0 AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
+		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.DESCRIPTION,ce.SCHOOL_DATE,to_char(ce.SCHOOL_DATE,'Dy') AS DAY,s.TITLE AS SCHOOL FROM CALENDAR_EVENTS ce,SCHOOLS s WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND position(','||ce.SCHOOL_ID||',' IN (SELECT SCHOOLS FROM STAFF WHERE STAFF_ID='".User('STAFF_ID')."'))>0 AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
 
 		if(count($events_RET))
 		{
@@ -125,19 +123,19 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-        //RSSOutput(USER('PROFILE'));
+        RSSOutput(USER('PROFILE'));
 
 		if(Preferences('HIDE_ALERTS')!='Y')
 		{
 		// warn if missing attendances
-		$categories_RET = DBGet(DBQuery("SELECT '0' AS ID,'Attendance' AS TITLE,0,NULL AS SORT_ORDER UNION SELECT ID,TITLE,1,SORT_ORDER FROM attendance_code_categories WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY 3,SORT_ORDER"));
+		$categories_RET = DBGet(DBQuery("SELECT '0' AS ID,'Attendance' AS TITLE,0,NULL AS SORT_ORDER UNION SELECT ID,TITLE,1,SORT_ORDER FROM ATTENDANCE_CODE_CATEGORIES WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY 3,SORT_ORDER"));
 		foreach($categories_RET as $category)
 		{
-			$RET = DBGET(DBQuery("SELECT cp.COURSE_PERIOD_ID,acc.SCHOOL_DATE,cp.TITLE FROM attendance_calendar acc,COURSE_PERIODS cp,SCHOOL_PERIODS sp WHERE acc.SYEAR='".UserSyear()."' AND (acc.MINUTES IS NOT NULL AND acc.MINUTES>0) AND cp.SCHOOL_ID=acc.SCHOOL_ID AND cp.SYEAR=acc.SYEAR AND acc.SCHOOL_DATE<'".DBDate()."' AND cp.CALENDAR_ID=acc.CALENDAR_ID AND cp.TEACHER_ID='".User('STAFF_ID')."'
+			$RET = DBGET(DBQuery("SELECT cp.COURSE_PERIOD_ID,acc.SCHOOL_DATE,cp.TITLE FROM ATTENDANCE_CALENDAR acc,COURSE_PERIODS cp,SCHOOL_PERIODS sp WHERE acc.SYEAR='".UserSyear()."' AND (acc.MINUTES IS NOT NULL AND acc.MINUTES>0) AND cp.SCHOOL_ID=acc.SCHOOL_ID AND cp.SYEAR=acc.SYEAR AND acc.SCHOOL_DATE<'".DBDate()."' AND cp.CALENDAR_ID=acc.CALENDAR_ID AND cp.TEACHER_ID='".User('STAFF_ID')."'
             AND cp.MARKING_PERIOD_ID IN (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='FY' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE UNION SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='SEM' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE UNION SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='QTR' AND SCHOOL_ID=acc.SCHOOL_ID AND acc.SCHOOL_DATE BETWEEN START_DATE AND END_DATE)
-			AND sp.PERIOD_ID=cp.PERIOD_ID AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(DAYOFWEEK(acc.SCHOOL_DATE) AS SIGNED)+1 FOR 1) IN cp.DAYS)>0
+			AND sp.PERIOD_ID=cp.PERIOD_ID AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(extract(DOW FROM acc.SCHOOL_DATE) AS INT)+1 FOR 1) IN cp.DAYS)>0
 				OR sp.BLOCK IS NOT NULL AND acc.BLOCK IS NOT NULL AND sp.BLOCK=acc.BLOCK)
-			AND NOT exists(SELECT '' FROM attendance_completed ac WHERE ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.STAFF_ID=cp.TEACHER_ID AND ac.PERIOD_ID=cp.PERIOD_ID AND TABLE_NAME='$category[ID]') AND position(',$category[ID],' IN cp.DOES_ATTENDANCE)>0 ORDER BY cp.TITLE,acc.SCHOOL_DATE"),array('SCHOOL_DATE'=>'ProperDate'),array('COURSE_PERIOD_ID'));
+			AND NOT exists(SELECT '' FROM ATTENDANCE_COMPLETED ac WHERE ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.STAFF_ID=cp.TEACHER_ID AND ac.PERIOD_ID=cp.PERIOD_ID AND TABLE_NAME='$category[ID]') AND position(',$category[ID],' IN cp.DOES_ATTENDANCE)>0 ORDER BY cp.TITLE,acc.SCHOOL_DATE"),array('SCHOOL_DATE'=>'ProperDate'),array('COURSE_PERIOD_ID'));
 			if (count($RET))
 			{
 				echo '<p><font color=red><b>'._('Warning!').'</b></font> - '.sprintf(Localize('colon',_('You have missing <b>%s</b> attendance data')),$category['TITLE']);
@@ -150,7 +148,7 @@ switch (User('PROFILE'))
 		if($CentreModules['Food_Service'] && Preferences('HIDE_ALERTS')!='Y')
 		{
 		// warn if negative food service balance
-		$staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM staff s WHERE s.STAFF_ID='.User('STAFF_ID')));
+		$staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM STAFF s WHERE s.STAFF_ID='.User('STAFF_ID')));
 		$staff = $staff[1];
 		if($staff['BALANCE'] && $staff['BALANCE']<0)
 			echo '<p><font color=red><b>'._('Warning!').'</b></font> - '.sprintf(_('You have a <b>negative</b> food service balance of <font color=red>%s</font>'),$staff['BALANCE']).'</p>';
@@ -162,11 +160,7 @@ switch (User('PROFILE'))
 	case 'parent':
 		DrawHeader($welcome.'<BR>&nbsp;'._('You are a <b>Parent</b> on the system.'));
 
-		if($_SESSION['PERSON_ID']) {
-		$notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,pn.TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,PEOPLE p WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND p.PERSON_ID='".User('PERSON_ID')."' AND pn.SCHOOL_ID IN (SELECT DISTINCT SCHOOL_ID FROM STUDENTS_JOIN_PEOPLE sjp, STUDENT_ENROLLMENT se WHERE sjp.PERSON_ID='".User('PERSON_ID')."' AND se.SYEAR=pn.SYEAR AND se.STUDENT_ID=sjp.STUDENT_ID AND se.START_DATE<=CURRENT_DATE AND (se.END_DATE>=CURRENT_DATE OR se.END_DATE IS NULL)) AND (p.PROFILE_ID IS NULL AND position(',parent,' IN pn.PUBLISHED_PROFILES)>0 OR p.PROFILE_ID IS NOT NULL AND position(p.PROFILE_ID IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
-		} else {
-		$notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,pn.TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND pn.SCHOOL_ID IN (SELECT DISTINCT SCHOOL_ID FROM STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=pn.SYEAR AND se.STUDENT_ID=sju.STUDENT_ID AND se.START_DATE<=CURRENT_DATE AND (se.END_DATE>=CURRENT_DATE OR se.END_DATE IS NULL)) AND (st.SCHOOLS IS NULL OR position(pn.SCHOOL_ID IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',parent,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(st.PROFILE_ID IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
-		}
+        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,pn.TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s,STAFF st WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND st.STAFF_ID='".User('STAFF_ID')."' AND pn.SCHOOL_ID IN (SELECT DISTINCT SCHOOL_ID FROM STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=pn.SYEAR AND se.STUDENT_ID=sju.STUDENT_ID AND se.START_DATE<=CURRENT_DATE AND (se.END_DATE>=CURRENT_DATE OR se.END_DATE IS NULL)) AND (st.SCHOOLS IS NULL OR position(','||pn.SCHOOL_ID||',' IN st.SCHOOLS)>0) AND (st.PROFILE_ID IS NULL AND position(',parent,' IN pn.PUBLISHED_PROFILES)>0 OR st.PROFILE_ID IS NOT NULL AND position(','||st.PROFILE_ID||',' IN pn.PUBLISHED_PROFILES)>0) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
 
 		if(count($notes_RET))
 		{
@@ -175,7 +169,7 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.SCHOOL_DATE,DATE_FORMAT(ce.SCHOOL_DATE,'%a') AS DAY,ce.DESCRIPTION,s.TITLE AS SCHOOL FROM calendar_events ce,SCHOOLS s WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND ce.SCHOOL_ID IN (SELECT DISTINCT SCHOOL_ID FROM STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=ce.SYEAR AND se.STUDENT_ID=sju.STUDENT_ID AND se.START_DATE<=CURRENT_DATE AND (se.END_DATE>=CURRENT_DATE OR se.END_DATE IS NULL)) AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
+		$events_RET = DBGet(DBQuery("SELECT ce.TITLE,ce.SCHOOL_DATE,to_char(ce.SCHOOL_DATE,'Dy') AS DAY,ce.DESCRIPTION,s.TITLE AS SCHOOL FROM CALENDAR_EVENTS ce,SCHOOLS s WHERE ce.SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND ce.SYEAR='".UserSyear()."' AND ce.SCHOOL_ID IN (SELECT DISTINCT SCHOOL_ID FROM STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=ce.SYEAR AND se.STUDENT_ID=sju.STUDENT_ID AND se.START_DATE<=CURRENT_DATE AND (se.END_DATE>=CURRENT_DATE OR se.END_DATE IS NULL)) AND s.ID=ce.SCHOOL_ID AND s.SYEAR=ce.SYEAR ORDER BY ce.SCHOOL_DATE,s.TITLE"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
 
 		if(count($events_RET))
 		{
@@ -184,12 +178,12 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-        //RSSOutput(USER('PROFILE'));
+        RSSOutput(USER('PROFILE'));
 
 		if($CentreModules['Food_Service'] && Preferences('HIDE_ALERTS')!='Y')
 		{
 		// warn if students with low food service balances
-		$extra['SELECT'] = ',fssa.STATUS,fsa.ACCOUNT_ID,CONCAT(\'$\',fsa.BALANCE,\'$\',\'16.5-\',fsa.BALANCE) AS DEPOSIT';
+		$extra['SELECT'] = ',fssa.STATUS,fsa.ACCOUNT_ID,\'$\'||fsa.BALANCE AS BALANCE,\'$\'||16.5-fsa.BALANCE AS DEPOSIT';
 		$extra['FROM'] = ',FOOD_SERVICE_ACCOUNTS fsa,FOOD_SERVICE_STUDENT_ACCOUNTS fssa';
 		$extra['WHERE'] = ' AND fssa.STUDENT_ID=s.STUDENT_ID AND fsa.ACCOUNT_ID=fssa.ACCOUNT_ID AND fssa.STATUS IS NULL AND fsa.BALANCE<\'5\'';
 		$extra['ASSOCIATED'] = User('STAFF_ID');
@@ -202,7 +196,7 @@ switch (User('PROFILE'))
 		}
 
 		// warn if negative food service balance
-		$staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM staff s WHERE s.STAFF_ID='.User('STAFF_ID')));
+		$staff = DBGet(DBQuery('SELECT (SELECT STATUS FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS STATUS,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM STAFF s WHERE s.STAFF_ID='.User('STAFF_ID')));
 		$staff = $staff[1];
 		if($staff['BALANCE'] && $staff['BALANCE']<0)
 			echo '<p><font color=red><b>'._('Warning!').'</b></font> - '.sprintf(_('You have a <b>negative</b> food service balance of <font color=red>%s</font>'),$staff['BALANCE']).'</p>';
@@ -214,7 +208,7 @@ switch (User('PROFILE'))
 	case 'student':
 		DrawHeader($welcome.'<BR>&nbsp;'._('You are a <b>Student</b> on the system.'));
 
-        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,pn.TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND pn.SCHOOL_ID='".UserSchool()."' AND ( position(',0,' IN pn.PUBLISHED_PROFILES)>0 OR position('Y' IN pn.PUBLISHED_PROFILES)>0 ) AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
+        $notes_RET = DBGet(DBQuery("SELECT s.TITLE AS SCHOOL,date(pn.PUBLISHED_DATE) AS PUBLISHED_DATE,pn.TITLE,pn.CONTENT FROM PORTAL_NOTES pn,SCHOOLS s WHERE pn.SYEAR='".UserSyear()."' AND pn.START_DATE<=CURRENT_DATE AND (pn.END_DATE>=CURRENT_DATE OR pn.END_DATE IS NULL) AND pn.SCHOOL_ID='".UserSchool()."' AND  position(',0,' IN pn.PUBLISHED_PROFILES)>0 AND s.ID=pn.SCHOOL_ID AND s.SYEAR=pn.SYEAR ORDER BY pn.SORT_ORDER,pn.PUBLISHED_DATE DESC"),array('PUBLISHED_DATE'=>'ProperDate','CONTENT'=>'_nl2br'));
 
 		if(count($notes_RET))
 		{
@@ -223,7 +217,7 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-		$events_RET = DBGet(DBQuery("SELECT TITLE,SCHOOL_DATE,DATE_FORMAT(SCHOOL_DATE,'Dy') AS DAY,DESCRIPTION FROM calendar_events WHERE SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
+		$events_RET = DBGet(DBQuery("SELECT TITLE,SCHOOL_DATE,to_char(SCHOOL_DATE,'Dy') AS DAY,DESCRIPTION FROM CALENDAR_EVENTS WHERE SCHOOL_DATE BETWEEN CURRENT_DATE AND CURRENT_DATE+6 AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"),array('SCHOOL_DATE'=>'ProperDate'),array('SCHOOL_DATE'));
 
 		if(count($events_RET))
 		{
@@ -232,18 +226,11 @@ switch (User('PROFILE'))
 			echo '</p>';
 		}
 
-        //RSSOutput(USER('PROFILE'));
+        RSSOutput(USER('PROFILE'));
 
 		echo '<p>&nbsp;'._('Happy learning...').'</p>';
 	break;
 }
-
-if($MoodleActive) {
-	/* Moodle integrate */
-	global $token;
-	sync_user_grade( $token );
-}
-
 
 function _nl2br($value,$column)
 {
@@ -275,7 +262,7 @@ function RSSOutput($profile) {
     $feed = new SimplePie('http://www.centresis.org/index.php/portal-'.$profile.'?format=feed&type=rss');
     $feed->handle_content_type();
 
-    $i=1;
+    $i=1;   
     $items_RET = array();
     foreach ($feed->get_items() as $item) {
         $items_RET[$i++] = array('DATE'=>$item->get_date('n/j/y'),'TITLE'=>$item->get_title(),'DESCRIPTION'=>$item->get_description());

@@ -18,8 +18,8 @@ if($_REQUEST['values'] && $_POST['values'])
 		{
 			$sql = "INSERT INTO STUDENT_ENROLLMENT_CODES ";
 
-			$fields = 'SYEAR,';
-			$values = "'".UserSyear()."',";
+			$fields = 'ID,SYEAR,';
+			$values = db_seq_nextval('STUDENT_ENROLLMENT_CODES_SEQ').",'".UserSyear()."',";
 
 			$go = 0;
 			foreach($columns as $column=>$value)

@@ -9,7 +9,7 @@ if($_REQUEST['modfunc']=='save')
 		$course_periods_RET = DBGet(DBQuery("SELECT cp.COURSE_PERIOD_ID,cp.TITLE,TEACHER_ID,cp.MARKING_PERIOD_ID,cp.MP FROM COURSE_PERIODS cp WHERE cp.COURSE_PERIOD_ID IN ($cp_list) ORDER BY (SELECT SORT_ORDER FROM SCHOOL_PERIODS WHERE PERIOD_ID=cp.PERIOD_ID)"));
 		//echo '<pre>'; var_dump($course_periods_RET); echo '</pre>';
 		if($_REQUEST['include_teacher']=='Y')
-			$teachers_RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME,FIRST_NAME,ROLLOVER_ID FROM staff WHERE STAFF_ID IN (SELECT TEACHER_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID IN ($cp_list))"),array(),array('STAFF_ID'));
+			$teachers_RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME,FIRST_NAME,ROLLOVER_ID FROM STAFF WHERE STAFF_ID IN (SELECT TEACHER_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID IN ($cp_list))"),array(),array('STAFF_ID'));
 		//echo '<pre>'; var_dump($teachers_RET); echo '</pre>';
 
 		$handle = PDFStart();
@@ -41,11 +41,14 @@ if($_REQUEST['modfunc']=='save')
 						$teacher = $teachers_RET[$teacher_id][1];
 
 						echo '<TR><TD valign=bottom><TABLE>';
-						if($UserPicturesPath && (($size=getimagesize($picture_path=$UserPicturesPath.UserSyear().'/'.$teacher_id.'.JPG')) || $_REQUEST['last_year']=='Y' && $staff['ROLLOVER_ID'] && ($size=getimagesize($picture_path=$UserPicturesPath.(UserSyear()-1).'/'.$staff['ROLLOVER_ID'].'.JPG'))))
+                        $picture_path = FindPicture('user', $teacher_id);
+                        if (!empty($picture_path)) {
+                            $size = getimagesize($picture_path);
 							if($size[1]/$size[0] > 172/130)
 								echo '<TR><TD width=130><IMG SRC="'.$picture_path.'" height=172></TD></TR>';
 							else
 								echo '<TR><TD width=130><IMG SRC="'.$picture_path.'" width=130></TD></TR>';
+                        }
 						else
 							echo '<TR><TD width=130 height=172></TD></TR>';
 						echo '<TR><TD><FONT size=-1><B>'.$teacher['LAST_NAME'].'</B><BR>'.$teacher['FIRST_NAME'].'</FONT></TD></TR>';
@@ -60,11 +63,14 @@ if($_REQUEST['modfunc']=='save')
 						if($i++%5==0)
 							echo '<TR>';
 						echo '<TD valign=bottom><TABLE>';
-						if($StudentPicturesPath && (($size=getimagesize($picture_path=$StudentPicturesPath.UserSyear().'/'.$student_id.'.JPG')) || $_REQUEST['last_year']=='Y' && ($size=getimagesize($picture_path=$StudentPicturesPath.(UserSyear()-1).'/'.$student_id.'.JPG'))))
+                        $picture_path = FindPicture('student', $student_id);
+                        if (!empty($picture_path)) {
+                            $size = getimagesize($picture_path);
 							if($size[1]/$size[0] > 172/130)
 								echo '<TR><TD width=130><IMG SRC="'.$picture_path.'" height=172></TD></TR>';
 							else
 								echo '<TR><TD width=130><IMG SRC="'.$picture_path.'" width=130></TD></TR>';
+                        }
 						else
 							echo '<TR><TD width=130 height=172></TD></TR>';
 						echo '<TR><TD><FONT size=-1><B>'.$student['LAST_NAME'].'</B><BR>'.$student['FIRST_NAME'].'</FONT></TD></TR>';
@@ -132,7 +138,7 @@ function mySearch($type,$extra='')
 		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=$_REQUEST[modfunc]&search_modfunc=list&next_modname=$_REQUEST[next_modname] method=POST>";
 		echo '<TABLE border=0>';
 
-		$RET = DBGet(DBQuery("SELECT STAFF_ID,CONCAT(LAST_NAME,', ',FIRST_NAME) AS FULL_NAME FROM staff WHERE PROFILE='teacher' AND (SCHOOLS IS NULL OR position(',".UserSchool().",' IN SCHOOLS)>0) AND SYEAR='".UserSyear()."' ORDER BY FULL_NAME"));
+		$RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME||', '||FIRST_NAME AS FULL_NAME FROM STAFF WHERE PROFILE='teacher' AND (SCHOOLS IS NULL OR position(',".UserSchool().",' IN SCHOOLS)>0) AND SYEAR='".UserSyear()."' ORDER BY FULL_NAME"));
 		echo '<TR><TD align=right width=120>'._('Teacher').'</TD><TD>';
 		echo "<SELECT name=teacher_id style='max-width:250;'><OPTION value=''>"._('N/A')."</OPTION>";
 		foreach($RET as $teacher)

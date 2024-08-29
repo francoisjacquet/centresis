@@ -6,8 +6,8 @@ $menu['Eligibility']['admin'] = array(
 						'Eligibility/StudentList.php'=>_('Student List'),
 						'Eligibility/TeacherCompletion.php'=>_('Teacher Completion'),
 						2=>_('Setup'),
-						'Eligibility/Activities.php'=>_('Activities')
-						//'Eligibility/EntryTimes.php'=>_('Entry Times')
+						'Eligibility/Activities.php'=>_('Activities'),
+						'Eligibility/EntryTimes.php'=>_('Entry Times')
 					);
 
 $menu['Eligibility']['teacher'] = array(

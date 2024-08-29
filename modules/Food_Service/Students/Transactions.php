@@ -11,12 +11,11 @@ if($_REQUEST['values'] && $_POST['values'] && $_REQUEST['save'])
 		if(($_REQUEST['values']['TYPE']=='Deposit' || $_REQUEST['values']['TYPE']=='Credit' || $_REQUEST['values']['TYPE']=='Debit') && ($amount = is_money($_REQUEST['values']['AMOUNT'])))
 		{
 			// get next transaction id
-			//$id = DBGet(DBQuery("SELECT ".db_nextval('FOOD_SERVICE_TRANSACTIONS')." AS SEQ_ID ".FROM_DUAL));
-			//$id = $id[1]['SEQ_ID'];
-			$id = db_nextval('FOOD_SERVICE_TRANSACTIONS');
+			$id = DBGet(DBQuery("SELECT ".db_seq_nextval('FOOD_SERVICE_TRANSACTIONS_SEQ')." AS SEQ_ID ".FROM_DUAL));
+			$id = $id[1]['SEQ_ID'];
 
-			$fields = 'TRANSACTION_ID,AMOUNT,DISCOUNT,SHORT_NAME,DESCRIPTION';
-			$values = "'".$id."','".($_REQUEST['values']['TYPE']=='Debit' ? -$amount : $amount)."',NULL,'".strtoupper($_REQUEST['values']['OPTION'])."','".str_replace("\'","''",$_REQUEST['values']['OPTION'].' '.$_REQUEST['values']['DESCRIPTION'])."'";
+			$fields = 'ITEM_ID,TRANSACTION_ID,AMOUNT,DISCOUNT,SHORT_NAME,DESCRIPTION';
+			$values = "'0','".$id."','".($_REQUEST['values']['TYPE']=='Debit' ? -$amount : $amount)."',NULL,'".strtoupper($_REQUEST['values']['OPTION'])."','".str_replace("\'","''",$_REQUEST['values']['OPTION'].' '.$_REQUEST['values']['DESCRIPTION'])."'";
 			$sql = "INSERT INTO FOOD_SERVICE_TRANSACTION_ITEMS (".$fields.") values (".$values.")";
 			DBQuery($sql);
 
@@ -24,9 +23,7 @@ if($_REQUEST['values'] && $_POST['values'] && $_REQUEST['save'])
 			$fields = 'TRANSACTION_ID,SYEAR,SCHOOL_ID,ACCOUNT_ID,BALANCE,TIMESTAMP,SHORT_NAME,DESCRIPTION,SELLER_ID';
 			$values = "'".$id."','".UserSyear()."','".UserSchool()."','".$account_id."',(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID='".$account_id."'),CURRENT_TIMESTAMP,'".strtoupper($_REQUEST['values']['TYPE'])."','".$_REQUEST['values']['TYPE']."','".User('STAFF_ID')."'";
 			$sql2 = "INSERT INTO FOOD_SERVICE_TRANSACTIONS (".$fields.") values (".$values.")";
-			//DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT;');
-			DBQuery($sql1);
-			DBQuery($sql2);
+			DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT');
 		}
 		else
 			$error = ErrorMessage(array(_('Please enter valid Type and Amount.')));
@@ -58,7 +55,7 @@ Search('student_id',$extra);
 
 if(UserStudentID() && !$_REQUEST['modfunc'])
 {
-	$student = DBGet(DBQuery("SELECT s.STUDENT_ID,CONCAT(".(Preferences('NAME')=='Common'?'coalesce(s.CUSTOM_200000002,s.FIRST_NAME)':'s.FIRST_NAME').",' ',s.LAST_NAME) AS FULL_NAME,fsa.ACCOUNT_ID,fsa.STATUS,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE FROM STUDENTS s,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID='".UserStudentID()."' AND fsa.STUDENT_ID=s.STUDENT_ID"));
+	$student = DBGet(DBQuery("SELECT s.STUDENT_ID,".(Preferences('NAME')=='Common'?'coalesce(s.CUSTOM_200000002,s.FIRST_NAME)':'s.FIRST_NAME')."||' '||s.LAST_NAME AS FULL_NAME,fsa.ACCOUNT_ID,fsa.STATUS,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE FROM STUDENTS s,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID='".UserStudentID()."' AND fsa.STUDENT_ID=s.STUDENT_ID"));
 	$student = $student[1];
 
 	//$PHP_tmp_SELF = PreparePHP_SELF();

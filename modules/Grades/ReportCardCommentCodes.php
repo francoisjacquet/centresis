@@ -33,13 +33,13 @@ if($_REQUEST['modfunc']=='update')
 					{
 						$sql = 'INSERT INTO REPORT_CARD_COMMENT_CODES ';
 						$fields = 'ID,SCHOOL_ID,SCALE_ID,';
-						$values = db_nextval('REPORT_CARD_COMMENT_CODES').',\''.UserSchool().'\',\''.$_REQUEST['tab_id'].'\',';
+						$values = db_seq_nextval('REPORT_CARD_COMMENT_CODES_SEQ').',\''.UserSchool().'\',\''.$_REQUEST['tab_id'].'\',';
 					}
 					else
 					{
 						$sql = 'INSERT INTO REPORT_CARD_COMMENT_CODE_SCALES ';
-						$fields = 'SCHOOL_ID,';
-						$values = '\''.UserSchool().'\',';
+						$fields = 'ID,SCHOOL_ID,';
+						$values = db_seq_nextval('REPORT_CARD_COMMENT_CODE_SCALES_SEQ').',\''.UserSchool().'\',';
 					}
 
 					$go = false;

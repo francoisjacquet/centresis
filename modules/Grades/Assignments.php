@@ -10,15 +10,15 @@ if($_REQUEST['day_values'] && $_POST['day_values'])
 	{
 		if($_REQUEST['day_values'][$id]['ASSIGNED_DATE'] && $_REQUEST['month_values'][$id]['ASSIGNED_DATE'] && $_REQUEST['year_values'][$id]['ASSIGNED_DATE'])
 		{
-			while(!VerifyDate($_REQUEST['year_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['month_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['day_values'][$id]['ASSIGNED_DATE']))
+			while(!VerifyDate($_REQUEST['day_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['month_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['year_values'][$id]['ASSIGNED_DATE']))
 				$_REQUEST['day_values'][$id]['ASSIGNED_DATE']--;
-			$_REQUEST['values'][$id]['ASSIGNED_DATE'] = $_REQUEST['year_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['month_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['day_values'][$id]['ASSIGNED_DATE'];
+			$_REQUEST['values'][$id]['ASSIGNED_DATE'] = $_REQUEST['day_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['month_values'][$id]['ASSIGNED_DATE'].'-'.$_REQUEST['year_values'][$id]['ASSIGNED_DATE'];
 		}
 		if($_REQUEST['day_values'][$id]['DUE_DATE'] && $_REQUEST['month_values'][$id]['DUE_DATE'] && $_REQUEST['year_values'][$id]['DUE_DATE'])
 		{
-			while(!VerifyDate($_REQUEST['year_values'][$id]['DUE_DATE'].'-'.$_REQUEST['month_values'][$id]['DUE_DATE'].'-'.$_REQUEST['day_values'][$id]['DUE_DATE']))
+			while(!VerifyDate($_REQUEST['day_values'][$id]['DUE_DATE'].'-'.$_REQUEST['month_values'][$id]['DUE_DATE'].'-'.$_REQUEST['year_values'][$id]['DUE_DATE']))
 				$_REQUEST['day_values'][$id]['DUE_DATE']--;
-			$_REQUEST['values'][$id]['DUE_DATE'] = $_REQUEST['year_values'][$id]['DUE_DATE'].'-'.$_REQUEST['month_values'][$id]['DUE_DATE'].'-'.$_REQUEST['day_values'][$id]['DUE_DATE'];
+			$_REQUEST['values'][$id]['DUE_DATE'] = $_REQUEST['day_values'][$id]['DUE_DATE'].'-'.$_REQUEST['month_values'][$id]['DUE_DATE'].'-'.$_REQUEST['year_values'][$id]['DUE_DATE'];
 		}
 	}
 	$_POST['values'] = $_REQUEST['values'];
@@ -49,8 +49,6 @@ if($_REQUEST['modfunc']=='update')
 						$value += 0;
 					elseif($column=='FINAL_GRADE_PERCENT' && $value!='')
 						$value /= 100;
-					elseif($column=='DUE_DATE')
-						$value = date("Y-m-d", strtotime($value));
 					elseif($column=='COURSE_ID')
 					{
 						if($value=='Y')
@@ -65,7 +63,7 @@ if($_REQUEST['modfunc']=='update')
 							$sql .= "COURSE_PERIOD_ID='".UserCoursePeriod()."',";
 						}
 					}
-					$sql .= ($column=='DUE_DATE') ? $column."='".str_replace("\'","''",date("Y-m-d", strtotime($value)))."'," : $column."='".str_replace("\'","''",$value)."',";
+					$sql .= $column."='".str_replace("\'","''",$value)."',";
 				}
 
 				if($_REQUEST['tab_id']!='new')
@@ -80,7 +78,7 @@ if($_REQUEST['modfunc']=='update')
 				{
 					$sql = 'INSERT INTO GRADEBOOK_ASSIGNMENTS ';
 					$fields = "ASSIGNMENT_ID,STAFF_ID,MARKING_PERIOD_ID,";
-					$values = db_nextval('GRADEBOOK_ASSIGNMENTS').",'".User('STAFF_ID')."','".UserMP()."',";
+					$values = db_seq_nextval('GRADEBOOK_ASSIGNMENTS_SEQ').",'".User('STAFF_ID')."','".UserMP()."',";
 					if($_REQUEST['tab_id'])
 					{
 						$fields .= "ASSIGNMENT_TYPE_ID,";
@@ -93,7 +91,7 @@ if($_REQUEST['modfunc']=='update')
 				{
 					$sql = 'INSERT INTO GRADEBOOK_ASSIGNMENT_TYPES ';
 					$fields = 'ASSIGNMENT_TYPE_ID,STAFF_ID,COURSE_ID,';
-					$values = db_nextval('GRADEBOOK_ASSIGNMENT_TYPES').",'".User('STAFF_ID')."',(SELECT COURSE_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".UserCoursePeriod()."'),";
+					$values = db_seq_nextval('GRADEBOOK_ASSIGNMENT_TYPES_SEQ').",'".User('STAFF_ID')."',(SELECT COURSE_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".UserCoursePeriod()."'),";
 				}
 
 				$go = false;
@@ -139,6 +137,13 @@ if($_REQUEST['modfunc']=='update')
 
 if($_REQUEST['modfunc']=='remove')
 {
+    // First make sure we are NOT deleting more than we wish for
+    if($_REQUEST['tab_id']=='new') {
+        $assignments_RET = DBGet(DBQuery("SELECT ASSIGNMENT_ID FROM GRADEBOOK_ASSIGNMENTS WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'"));
+        if(count($assignments_RET))
+            BackPrompt(_('There still are assignments in this category.').' '._('Please reassign or delete those assignments before trying to delete the assignment category.'));
+    }
+    
 	if(DeletePromptX($_REQUEST['tab_id']!='new'?'assignment':'assignment type'))
         {
 		if($_REQUEST['tab_id']!='new')
@@ -148,13 +153,13 @@ if($_REQUEST['modfunc']=='remove')
 		}
 		else
 		{
-			$assignments_RET = DBGet(DBQuery("SELECT ASSIGNMENT_ID FROM GRADEBOOK_ASSIGNMENTS WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'"));
-			if(count($assignments_RET))
-			{
-				foreach($assignments_RET as $assignment_id)
-					DBQuery("DELETE FROM GRADEBOOK_GRADES WHERE ASSIGNMENT_ID='".$assignment_id['ASSIGNMENT_ID']."'");
-			}
-			DBQuery("DELETE FROM GRADEBOOK_ASSIGNMENTS WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'");
+//            $assignments_RET = DBGet(DBQuery("SELECT ASSIGNMENT_ID FROM GRADEBOOK_ASSIGNMENTS WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'"));
+//            if(count($assignments_RET))
+//            {
+//                foreach($assignments_RET as $assignment_id)
+//                    DBQuery("DELETE FROM GRADEBOOK_GRADES WHERE ASSIGNMENT_ID='".$assignment_id['ASSIGNMENT_ID']."'");
+//            }
+//            DBQuery("DELETE FROM GRADEBOOK_ASSIGNMENTS WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'");
 			DBQuery("DELETE FROM GRADEBOOK_ASSIGNMENT_TYPES WHERE ASSIGNMENT_TYPE_ID='$_REQUEST[id]'");
 		}
 		unset($_REQUEST['id']);

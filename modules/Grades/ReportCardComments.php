@@ -28,7 +28,7 @@ if($_REQUEST['modfunc']=='update')
 				{
 					$sql = "INSERT INTO $table ";
 					$fields = "ID,SCHOOL_ID,SYEAR,COURSE_ID,".($_REQUEST['tab_id']=='new'?'':"CATEGORY_ID,");
-					$values = db_nextval($table.'').",'".UserSchool()."','".UserSyear()."',".($_REQUEST['tab_id']=='new'?"$_REQUEST[course_id]":($_REQUEST['tab_id']=='-1'?"NULL,NULL":($_REQUEST['tab_id']=='0'?"'0',NULL":"'$_REQUEST[course_id]','$_REQUEST[tab_id]'"))).",";
+					$values = db_seq_nextval($table.'_SEQ').",'".UserSchool()."','".UserSyear()."',".($_REQUEST['tab_id']=='new'?"$_REQUEST[course_id]":($_REQUEST['tab_id']=='-1'?"NULL,NULL":($_REQUEST['tab_id']=='0'?"'0',NULL":"'$_REQUEST[course_id]','$_REQUEST[tab_id]'"))).",";
 
 					$go = false;
 					foreach($columns as $column=>$value)

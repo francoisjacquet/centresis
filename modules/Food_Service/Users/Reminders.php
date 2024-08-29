@@ -24,11 +24,11 @@ if($_REQUEST['modfunc']=='save')
 	$school = DBGet(DBQuery("SELECT TITLE FROM SCHOOLS WHERE ID='".UserSchool()."' AND SYEAR='".UserSyear()."'"));
 	$school = $school[1]['TITLE'];
 
-	$staffs = DBGet(DBQuery("SELECT s.STAFF_ID,s.FIRST_NAME,s.LAST_NAME,s.MIDDLE_NAME,s.PROFILE,fsa.STATUS,fsa.BALANCE FROM staff s,FOOD_SERVICE_STAFF_ACCOUNTS fsa WHERE s.STAFF_ID IN (".$st_list.") AND fsa.STAFF_ID=s.STAFF_ID"));
+	$staffs = DBGet(DBQuery("SELECT s.STAFF_ID,s.FIRST_NAME,s.LAST_NAME,s.MIDDLE_NAME,s.PROFILE,fsa.STATUS,fsa.BALANCE FROM STAFF s,FOOD_SERVICE_STAFF_ACCOUNTS fsa WHERE s.STAFF_ID IN (".$st_list.") AND fsa.STAFF_ID=s.STAFF_ID"));
 	$handle = PDFStart();
 	foreach($staffs as $staff)
 	{
-		$last_deposit = DBGet(DBQuery("SELECT (SELECT sum(AMOUNT) FROM FOOD_SERVICE_STAFF_TRANSACTION_ITEMS WHERE TRANSACTION_ID=fst.TRANSACTION_ID) AS AMOUNT,DATE_FORMAT(fst.TIMESTAMP,'%Y-%m-%d') AS DATE FROM FOOD_SERVICE_STAFF_TRANSACTIONS fst WHERE fst.SHORT_NAME='DEPOSIT' AND fst.STAFF_ID='".$staff['STAFF_ID']."' AND SYEAR='".UserSyear()."' ORDER BY fst.TRANSACTION_ID DESC LIMIT 1"),array('DATE'=>'ProperDate'));
+		$last_deposit = DBGet(DBQuery("SELECT (SELECT sum(AMOUNT) FROM FOOD_SERVICE_STAFF_TRANSACTION_ITEMS WHERE TRANSACTION_ID=fst.TRANSACTION_ID) AS AMOUNT,to_char(fst.TIMESTAMP,'YYYY-MM-DD') AS DATE FROM FOOD_SERVICE_STAFF_TRANSACTIONS fst WHERE fst.SHORT_NAME='DEPOSIT' AND fst.STAFF_ID='".$staff['STAFF_ID']."' AND SYEAR='".UserSyear()."' ORDER BY fst.TRANSACTION_ID DESC LIMIT 1"),array('DATE'=>'ProperDate'));
 		$last_deposit = $last_deposit[1];
 
 		if($staff['BALANCE'] < $minimum)
@@ -66,9 +66,9 @@ if(!$_REQUEST['modfunc'] || $_REQUEST['modfunc']=='list')
 	StaffWidgets('fsa_exists_Y');
 
 	$extra['SELECT'] .= ',coalesce(fsa.STATUS,\'Active\') AS STATUS,fsa.BALANCE';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE fsa.BALANCE < \''.$warning.'\' AND fsa.BALANCE >= 0 LIMIT 1) AS WARNING';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE fsa.BALANCE < 0 AND fsa.BALANCE >= \''.$minimum.'\' LIMIT 1) AS NEGATIVE';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE fsa.BALANCE < '.$minimum.' LIMIT 1) AS MINIMUM';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < \''.$warning.'\' AND fsa.BALANCE >= 0) AS WARNING';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < 0 AND fsa.BALANCE >= \''.$minimum.'\') AS NEGATIVE';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < '.$minimum.') AS MINIMUM';
 	if(!strpos($extra['FROM'],'fsa'))
 	{
 		$extra['FROM'] .= ',FOOD_SERVICE_STAFF_ACCOUNTS fsa';
@@ -130,7 +130,7 @@ function reminder($staff,$school,$target,$last_deposit,$note)
 	echo '</TD></TR>';
 
 	$note = str_replace('%F',$staff['FIRST_NAME'],$note);
-	$note = str_replace('%P',money_formatt('%i',$payment),$note);
+	$note = str_replace('%P',money_format('%i',$payment),$note);
 	$note = str_replace('%T',$target,$note);
 
 	echo '<TR><TD colspan=3>';

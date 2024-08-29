@@ -8,7 +8,7 @@ $use_mailing = true;
 // set this to false to disable bus pickoff/dropoff defaulting checked
 $use_bus = true;
 // set this to false to disable legacy contact info
-$use_contact = true;
+$use_contact = false;
 // these are the static items for the dynamic select lists in the format
 // $options = array('Item 1'=>'Item 1','Item 2'=>'Item2');
 $city_options = array('Kokomo'=>'Kokomo');

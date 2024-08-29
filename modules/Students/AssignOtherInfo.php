@@ -84,9 +84,9 @@ if(!$_REQUEST['modfunc'])
 		echo '<BR>';
 
 		if($_REQUEST['category_id'])
-			$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS FROM CUSTOM_FIELDS WHERE CATEGORY_ID='$_REQUEST[category_id]'"),array(),array('TYPE'));
+			$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND CATEGORY_ID='$_REQUEST[category_id]'"),array(),array('TYPE'));
 		else
-			$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS FROM CUSTOM_FIELDS"),array(),array('TYPE'));
+			$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students'"),array(),array('TYPE'));
 
 		$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM STUDENT_FIELD_CATEGORIES"));
 		echo '<CENTER><TABLE bgcolor=#FFFFCC><TR><TD>';
@@ -245,7 +245,7 @@ if(!$_REQUEST['modfunc'])
 
 			echo '<TR><TD align=right valign=top><small><b>'._('Calendar').'</b></small></TD>';
 			echo '<TD>';
-			$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM attendance_calendars WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY DEFAULT_CALENDAR ASC"));
+			$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM ATTENDANCE_CALENDARS WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY DEFAULT_CALENDAR ASC"));
 			$options = array();
 			if(count($calendars_RET))
 			{

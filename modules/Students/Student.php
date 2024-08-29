@@ -41,7 +41,7 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 	{
 		foreach($_REQUEST['month_students'] as $column=>$value)
 		{
-			$_REQUEST['students'][$column] = $_REQUEST['year_students'][$column].'-'.$_REQUEST['month_students'][$column].'-'.$_REQUEST['day_students'][$column];
+			$_REQUEST['students'][$column] = $_REQUEST['day_students'][$column].'-'.$_REQUEST['month_students'][$column].'-'.$_REQUEST['year_students'][$column];
 			if($_REQUEST['students'][$column]=='--')
 				$_REQUEST['students'][$column] = '';
 			elseif(!VerifyDate($_REQUEST['students'][$column]))
@@ -65,13 +65,9 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 					if($column=='USERNAME' && $value)
 						if(DBGet(DBQuery("SELECT STUDENT_ID FROM STUDENTS WHERE USERNAME='".str_replace("\'","''",$value)."'")))
 							$value = '';
-					if(!is_array($value)) {
-						if($column=="PASSWORD"):
-							$sql .= "$column='".str_replace("\'","''",str_replace("&#39;","''",EncryptPWD($value)))."',";
-						else:
-							$sql .= "$column='".str_replace("\'","''",str_replace('&#39;',"''",$value))."',";
-						endif;
-					} else
+					if(!is_array($value))
+						$sql .= "$column='".str_replace("\'","''",str_replace('&#39;',"''",$value))."',";
+					else
 					{
 						$sql .= $column."='||";
 						foreach($value as $val)
@@ -83,28 +79,18 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 					}
 				}
 				$sql = substr($sql,0,-1) . " WHERE STUDENT_ID='".UserStudentID()."'";
-				//echo $sql;
 				DBQuery($sql);
-
-				if($MoodleActive) { 
-					global $token, $user_suffix;
-					$csuser_data = get_centre_student ( UserStudentID(), $user_suffix );
-					$csuser_id = update_user( $csuser_data, $token );
-					assign_role( UserStudentID(), STUDENT_ROLE_ID, SYSTEM_CONTEXT_ID, $token ); // Make role 'Student'
-				}
-				
+                CallHooks('student.update',array('STUDENT_ID' => UserStudentID()));
 			}
 
-			if((count($_REQUEST['values']['STUDENT_ENROLLMENT'][UserStudentID()])) || ($_REQUEST['month_values']['STUDENT_ENROLLMENT'][UserStudentID()]!="" && $_REQUEST['day_values']['STUDENT_ENROLLMENT'][UserStudentID()]!="" && $_REQUEST['year_values']['STUDENT_ENROLLMENT'][UserStudentID()]!=""))
+			if(count($_REQUEST['values']['STUDENT_ENROLLMENT'][UserStudentID()]))
 			{
-				$_REQUEST['values']['STUDENT_ENROLLMENT'][UserStudentID()]['END_DATE'] = $_REQUEST['year_values']['STUDENT_ENROLLMENT'][UserStudentID()]['END_DATE'].'-'.$_REQUEST['month_values']['STUDENT_ENROLLMENT'][UserStudentID()]['END_DATE'].'-'.$_REQUEST['day_values']['STUDENT_ENROLLMENT'][UserStudentID()]['END_DATE'];
 				$sql = "UPDATE STUDENT_ENROLLMENT SET ";
 				foreach($_REQUEST['values']['STUDENT_ENROLLMENT'][UserStudentID()] as $column=>$value)
 					$sql .= "$column='".str_replace("\'","''",str_replace('&#39;',"''",$value))."',";
 				$sql = substr($sql,0,-1) . " WHERE STUDENT_ID='".UserStudentID()."' AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'";
-				//echo '<br>'.$sql; exit();
 				DBQuery($sql);
-				
+                CallHooks('student_enrollment.update',array('STUDENT_ID' => UserStudentID(), 'SYEAR' => UserSyear()));
 			}
 		}
 		else
@@ -119,18 +105,15 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 			{
 				do
 				{
-					//$student_id = DBGet(DBQuery('SELECT '.db_nextval('STUDENTS').' AS STUDENT_ID '.FROM_DUAL));// for Postgres
-					//$student_id = $student_id[1]['STUDENT_ID'];// for Postgres
-					$student_id = db_nextval('STUDENTS');
+					$student_id = DBGet(DBQuery('SELECT '.db_seq_nextval('STUDENTS_SEQ').' AS STUDENT_ID '.FROM_DUAL));
+					$student_id = $student_id[1]['STUDENT_ID'];
 				}
 				while(count(DBGet(DBQuery("SELECT STUDENT_ID FROM STUDENTS WHERE STUDENT_ID='".$student_id."'"))));
 			}
 
 			$sql = "INSERT INTO STUDENTS ";
-//			$fields = 'STUDENT_ID,';
-//			$values = "'".$student_id."',";
-			$fields = '';
-			$values = '';
+			$fields = 'STUDENT_ID,';
+			$values = "'".$student_id."',";
 
 			foreach($_REQUEST['students'] as $column=>$value)
 			{
@@ -140,51 +123,29 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 				if($value)
 				{
 					$fields .= $column.',';
-					if(!is_array($value)) {
-						if($column=='PASSWORD') : 
-							$value = EncryptPWD($value);
-							$values .= "'".str_replace("\'","''",$value)."',";
-						else:						
-							$values .= "'".str_replace("\'","''",$value)."',";
-						endif;
-					} else
+					if(!is_array($value))
+						$values .= "'".str_replace("\'","''",$value)."',";
+					else
 					{
 						$values .= "'||";
 						foreach($value as $val)
 						{
 							if($val)
-								if($column=='PASSWORD') : 
-									$value = EncryptPWD($val);
-									$values .= "'".str_replace("\'","''",$value)."',";
-								else:
-									$values .= $val.'||';
-								endif;
+								$values .= $val.'||';
 						}
 						$values .= "',";
 					}
 				}
 			}
 			$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
-			//echo $sql;exit();
 			DBQuery($sql);
-			
-			if($MoodleActive) { 
-				global $token, $user_suffix;
-				$csnext_id = mysql_insert_id();
-				$csuser_data = get_centre_student ( $csnext_id, $user_suffix );
-				$csuser_id = create_user( $csuser_data, $token );
-				
-				/* Gets Moodle UserID then UPDATE Centre/SIS record of this user */
-				$sql = "UPDATE STUDENTS SET MOODLE_ID = '".$csuser_id."' WHERE STUDENT_ID='".$csnext_id."'";
-				DBQuery($sql);				
-				assign_role( $csuser_id, STUDENT_ROLE_ID, SYSTEM_CONTEXT_ID, $token ); // Make role 'Student'
-			}
+            CallHooks('student.create',array('STUDENT_ID' => $student_id));
 
 			$sql = "INSERT INTO STUDENT_ENROLLMENT ";
 			$fields = 'ID,STUDENT_ID,SYEAR,SCHOOL_ID,';
-			$values = "".db_nextval('STUDENT_ENROLLMENT').",'".$student_id."','".UserSyear()."','".UserSchool()."',";
+			$values = "".db_seq_nextval('STUDENT_ENROLLMENT_SEQ').",'".$student_id."','".UserSyear()."','".UserSchool()."',";
 
-			$_REQUEST['values']['STUDENT_ENROLLMENT']['new']['START_DATE'] = $_REQUEST['year_values']['STUDENT_ENROLLMENT']['new']['START_DATE'].'-'.$_REQUEST['month_values']['STUDENT_ENROLLMENT']['new']['START_DATE'].'-'.$_REQUEST['day_values']['STUDENT_ENROLLMENT']['new']['START_DATE'];
+			$_REQUEST['values']['STUDENT_ENROLLMENT']['new']['START_DATE'] = $_REQUEST['day_values']['STUDENT_ENROLLMENT']['new']['START_DATE'].'-'.$_REQUEST['month_values']['STUDENT_ENROLLMENT']['new']['START_DATE'].'-'.$_REQUEST['year_values']['STUDENT_ENROLLMENT']['new']['START_DATE'];
 
 			foreach($_REQUEST['values']['STUDENT_ENROLLMENT']['new'] as $column=>$value)
 			{
@@ -195,8 +156,8 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 				}
 			}
 			$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
-			//echo $sql; exit();
 			DBQuery($sql);
+            CallHooks('student_enrollment.create',array('STUDENT_ID' => UserStudentID(), 'SYEAR' => UserSyear()));
 
 			// create default food service account for this student
 			$sql = "INSERT INTO FOOD_SERVICE_ACCOUNTS (ACCOUNT_ID,BALANCE,TRANSACTION_ID) values('".$student_id."','0.00','0')";
@@ -212,7 +173,7 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 	}
 
 	if($_REQUEST['values'] && $_REQUEST['include']== _('Medical'))
-		SaveData(array('STUDENT_MEDICAL_ALERTS'=>"ID='__ID__'",'STUDENT_MEDICAL'=>"ID='__ID__'",'STUDENT_MEDICAL_VISITS'=>"ID='__ID__'",'fields'=>array('STUDENT_MEDICAL'=>'ID,STUDENT_ID,','STUDENT_MEDICAL_ALERTS'=>'ID,STUDENT_ID,','STUDENT_MEDICAL_VISITS'=>'ID,STUDENT_ID,'),'values'=>array('STUDENT_MEDICAL'=>db_nextval('STUDENT_MEDICAL').",'".UserStudentID()."',",'STUDENT_MEDICAL_ALERTS'=>db_nextval('STUDENT_MEDICAL_ALERTS').",'".UserStudentID()."',",'STUDENT_MEDICAL_VISITS'=>db_nextval('STUDENT_MEDICAL_VISITS').",'".UserStudentID()."',")));
+		SaveData(array('STUDENT_MEDICAL_ALERTS'=>"ID='__ID__'",'STUDENT_MEDICAL'=>"ID='__ID__'",'STUDENT_MEDICAL_VISITS'=>"ID='__ID__'",'fields'=>array('STUDENT_MEDICAL'=>'ID,STUDENT_ID,','STUDENT_MEDICAL_ALERTS'=>'ID,STUDENT_ID,','STUDENT_MEDICAL_VISITS'=>'ID,STUDENT_ID,'),'values'=>array('STUDENT_MEDICAL'=>db_seq_nextval('STUDENT_MEDICAL_SEQ').",'".UserStudentID()."',",'STUDENT_MEDICAL_ALERTS'=>db_seq_nextval('STUDENT_MEDICAL_ALERTS_SEQ').",'".UserStudentID()."',",'STUDENT_MEDICAL_VISITS'=>db_seq_nextval('STUDENT_MEDICAL_VISITS_SEQ').",'".UserStudentID()."',")));
 
 	if($_REQUEST['include']!= 'General_Info' && $_REQUEST['include']!= 'Address' && $_REQUEST['include']!= 'Medical' && $_REQUEST['include']!= 'Other_Info')
 		if(!strpos($_REQUEST['include'],'/'))

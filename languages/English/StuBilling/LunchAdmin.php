@@ -52,7 +52,7 @@ if($_REQUEST['modfunc']=='update')
 				$fprice = str_replace('$','',$_REQUEST[new_fprice][$category_id]);
 				$rprice = str_replace('$','',$_REQUEST[new_rprice][$category_id]);
 
-				DBQuery("INSERT INTO LUNCH_MENU (SCHOOL,ID,TITLE,PRICE,FREE_PRICE,REDUCED_PRICE,CATEGORY_ID,BUTTON) values('".UserSchool()."',".db_nextval('LUNCH_MENU').",'$title','$price','$fprice','$rprice','$category_id','".$_REQUEST[new_button][$category_id]."')");
+				DBQuery("INSERT INTO LUNCH_MENU (SCHOOL,ID,TITLE,PRICE,FREE_PRICE,REDUCED_PRICE,CATEGORY_ID,BUTTON) values('".UserSchool()."',".db_seq_nextval('LUNCH_MENU_SEQ').",'$title','$price','$fprice','$rprice','$category_id','".$_REQUEST[new_button][$category_id]."')");
 				unset($_REQUEST[new_price][$category_id]);
 			}
 		}
@@ -65,7 +65,7 @@ if($_REQUEST['modfunc']=='update')
 	}
 	
 	if($_REQUEST[new_category_title] && $_REQUEST[new_category_title]!='New Category')
-		DBQuery("INSERT INTO LUNCH_CATEGORIES (SCHOOL,CATEGORY_ID,TITLE) values('".UserSchool()."',".db_nextval('LUNCH_CATEGORY').",'$_REQUEST[new_category_title]')");	
+		DBQuery("INSERT INTO LUNCH_CATEGORIES (SCHOOL,CATEGORY_ID,TITLE) values('".UserSchool()."',".db_seq_nextval('LUNCH_CATEGORY_SEQ').",'$_REQUEST[new_category_title]')");	
 	
 	unset($_REQUEST['modfunc']);
 }
@@ -125,7 +125,7 @@ if(!isset($_REQUEST['modfunc']))
 			$link['remove']['link'] = "Modules.php?modname=$_REQUEST[modname]&modfunc=delete&user_school=".UserSchool();
 			$link['remove']['variables'] = array('id'=>'ID');
 			$link['add']['html'] = array('TITLE'=>makeTitleInput('',$category_id),'PRICE'=>makePriceInput('',$category_id),'FREE_PRICE'=>makeFPriceInput('',$category_id),'REDUCED_PRICE'=>makeRPriceInput('',$category_id),'BUTTON'=>makeButtonInput('',$category_id));
-			ListOutput($food,array('TITLE'=>'Name','BUTTON'=>'Key','PRICE'=>'Price','REDUCED_PRICE'=>'Reduced Price','FREE_PRICE'=>'Free Price'),'.','.',$link,array(),array('save'=>false));
+			ListOutput($food,array('TITLE'=>'Name','BUTTON'=>'Key','PRICE'=>'Price','REDUCED_PRICE'=>'Reduced Price','FREE_PRICE'=>'Free Price'),'','',$link,array(),array('save'=>false));
 			echo '</TD>';
 		}
 	}
@@ -142,7 +142,7 @@ if(!isset($_REQUEST['modfunc']))
 							<IMG SRC=assets/remove_button.gif></A></td>
 							<td><b>".makeCategoryInput($categories_RET[$category_id][1]['TITLE'],$category_id).'</b></td></tr></table></center>';
 				$link[add][html] = array('TITLE'=>makeTitleInput('',$category_id),'PRICE'=>makePriceInput('',$category_id),'FREE_PRICE'=>makeFPriceInput('',$category_id),'REDUCED_PRICE'=>makeRPriceInput('',$category_id),'BUTTON'=>makeButtonInput('',$category_id));
-				ListOutput(array(),array('TITLE'=>'Name','BUTTON'=>'Key','PRICE'=>'Price','REDUCED_PRICE'=>'Reduced Price','FREE_PRICE'=>'Free Price'),'.','.',$link,array(),array('save'=>false));
+				ListOutput(array(),array('TITLE'=>'Name','BUTTON'=>'Key','PRICE'=>'Price','REDUCED_PRICE'=>'Reduced Price','FREE_PRICE'=>'Free Price'),'','',$link,array(),array('save'=>false));
 				echo '</TD>';
 			}	
 		}

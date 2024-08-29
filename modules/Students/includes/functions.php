@@ -116,7 +116,7 @@ function _makeAutoSelectInput($column,$name,$request='students')
 	{
 		// add values found in current and previous year
 		if($request=='values[ADDRESS]')
-			$options_RET = DBGet(DBQuery("SELECT DISTINCT a.CUSTOM_$field[ID],upper(a.CUSTOM_$field[ID]) AS SORT_KEY FROM address a,STUDENTS_JOIN_ADDRESS sja,STUDENTS s,STUDENT_ENROLLMENT sse WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND s.STUDENT_ID=sja.STUDENT_ID AND sse.STUDENT_ID=s.STUDENT_ID AND (sse.SYEAR='".UserSyear()."' OR sse.SYEAR='".(UserSyear()-1)."') AND a.CUSTOM_$field[ID] IS NOT NULL ORDER BY SORT_KEY"));
+			$options_RET = DBGet(DBQuery("SELECT DISTINCT a.CUSTOM_$field[ID],upper(a.CUSTOM_$field[ID]) AS SORT_KEY FROM ADDRESS a,STUDENTS_JOIN_ADDRESS sja,STUDENTS s,STUDENT_ENROLLMENT sse WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND s.STUDENT_ID=sja.STUDENT_ID AND sse.STUDENT_ID=s.STUDENT_ID AND (sse.SYEAR='".UserSyear()."' OR sse.SYEAR='".(UserSyear()-1)."') AND a.CUSTOM_$field[ID] IS NOT NULL ORDER BY SORT_KEY"));
 		elseif($request=='values[PEOPLE]')
 			$options_RET = DBGet(DBQuery("SELECT DISTINCT p.CUSTOM_$field[ID],upper(p.CUSTOM_$field[ID]) AS SORT_KEY FROM PEOPLE p,STUDENTS_JOIN_PEOPLE sjp,STUDENTS s,STUDENT_ENROLLMENT sse WHERE p.PERSON_ID=sjp.PERSON_ID AND s.STUDENT_ID=sjp.STUDENT_ID AND sse.STUDENT_ID=s.STUDENT_ID AND (sse.SYEAR='".UserSyear()."' OR sse.SYEAR='".(UserSyear()-1)."') AND p.CUSTOM_$field[ID] IS NOT NULL ORDER BY SORT_KEY"));
 		else // students
@@ -179,7 +179,11 @@ function _makeMultipleInput($column,$name,$request='students')
 		if(count($select_options))
 		{
 			foreach($select_options as $option)
-				$options[$option] = $option;
+                if (strpos($option,'|')!==false) { // This is a multiple coded
+                    $parts = explode('|',$option);
+                    $options[$parts[0]] = $parts[1];
+                } else
+				    $options[$option] = $option;
 		}
 
 		if($value[$column]!='')
@@ -198,14 +202,14 @@ function _makeMultipleInput($column,$name,$request='students')
 		}
 		echo '<TR>';
 		$i = 0;
-		foreach($options as $option)
+		foreach($options as $key=>$option)
 		{
 			if($i%2==0)
 				echo '</TR><TR>';
 			if($value[$column]!='')
-				echo '<TD><INPUT type=checkbox name='.$request.'['.$column.'][] value=\"'.str_replace(array("'",'"'),array('&#39;','&rdquo;'),$option).'\"'.(strpos($value[$column],'||'.$option.'||')!==false?' CHECKED':'').'><small>'.str_replace(array("'",'"'),array('&#39;','\"'),$option).'</small></TD>';
+				echo '<TD><INPUT type=checkbox name='.$request.'['.$column.'][] value=\"'.str_replace(array("'",'"'),array('&#39;','&rdquo;'),$key).'\"'.(strpos($value[$column],'||'.$key.'||')!==false?' CHECKED':'').'><small>'.str_replace(array("'",'"'),array('&#39;','\"'),$option).'</small></TD>';
 			else
-				echo '<TD><INPUT type=checkbox name='.$request.'['.$column.'][] value="'.str_replace('"','&quot;',$option).'"><small>'.$option.'</small></TD>';
+				echo '<TD><INPUT type=checkbox name='.$request.'['.$column.'][] value="'.str_replace('"','&quot;',$key).'"><small>'.$option.'</small></TD>';
 			$i++;
 		}
 		echo '</TR><TR><TD colspan=2>';
@@ -218,7 +222,7 @@ function _makeMultipleInput($column,$name,$request='students')
 		if($value[$column]!='')
 		{
 			echo '","div'.$request.'['.$column.']",true);\' >';
-			echo '<span style=\'border-bottom-style:dotted;border-bottom-width:1px;border-bottom-color:'.Preferences('TITLES').';\'>'.($value[$column]!=''?str_replace('||',', ',substr($value[$column],2,-2)):'-').'</span>';
+			echo '<span style=\'border-bottom-style:dotted;border-bottom-width:1;border-bottom-color:'.Preferences('TITLES').';\'>'.($value[$column]!=''?str_replace('||',', ',substr($value[$column],2,-2)):'-').'</span>';
 			echo '</div></DIV>';
 		}
 	}
@@ -265,9 +269,10 @@ function _makeStartInput($value,$column)
 	elseif($_REQUEST['student_id']=='new')
 	{
 		$id = 'new';
-		$default = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS START_DATE FROM attendance_calendar WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
-		$default = $default[1]['START_DATE'];
-		if(!$default || DBDate('mysql')>$default)
+// NG: default date is always today, not the beginning of the school year
+//		$default = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS START_DATE FROM ATTENDANCE_CALENDAR WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
+//		$default = $default[1]['START_DATE'];
+//		if(!$default || DBDate('postgres')>$default)
 			$default = DBDate();
 		$value = $default;
 	}

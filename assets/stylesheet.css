@@ -1,35 +1,20 @@
-@font-face {
-font-family: 'Source Sans Pro';
-src: url("fonts/SourceSansPro-Regular.otf") format("opentype");
-}
-
-@font-face {
-font-family: 'Source Sans Pro';
-font-weight: bold;
-src: url("fonts/SourceSansPro-Bold.otf") format("opentype");
-}
-
 .Box {
   background: #b6b7cb;
 }
 
 .BoxContents {
-  background-color: #ececec;
-  font-family: 'Source Sans Pro', sans-serif;
-  font-size: 12px;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 10px;
 }
 
-.BoxContents font, .BoxContents a { text-decoration:none; }
-.BoxContents a:hover { opacity:0.6; }
-
 TD.BoxHeading {
-  font-family: 'Source Sans Pro', sans-serif;
-  font-size: 12px;
+  font-family: Verdana, Arial, sans-serif;
+  font-size: 10px;
   font-weight: bold;
 }
 
 .FontBox {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: Verdana, Arial, sans-serif;
   font-size: 10px;
   font-weight: bold;
 }
@@ -52,7 +37,7 @@ A.column_heading {
 }
 
 TD.Box, SPAN.Box {
-  font-family: 'Source Sans Pro', sans-serif;
+  font-family: Verdana, Arial, sans-serif;
   font-size: 10px;
 }
 
@@ -72,65 +57,7 @@ TD.RightBorder {
 
 A.BottomButton {
 	font-size: 10px;
-	font-family: 'Source Sans Pro', sans-serif;
+	font-family: Verdana, Arial, sans-serif;
 	font-weight: bold;
 	color: #333333;
 }
-
-h3 { color:#262626; display:inline-block; font-family: 'Source Sans Pro', sans-serif; font-size:13px; margin:0 0 0 5px; padding:0; }
-h3:hover { opacity:0.6; }
-
-select, input { 
-    border: 1px solid #c4c5c6;
-    border-radius: 4px;
-    font-family: 'Source Sans Pro',sans-serif;
-    margin-bottom: 4px;
-    padding: 5px 4px;
-}
-
-thead { background-color:#252525 !important; font-family: 'Source Sans Pro', sans-serif !important; }
-
-/* ADMIN AREA */
-a { text-decoration: none !important; }
-.menus { 
-    border-bottom-color: #DFDFDF;
-    border-top-color: #F9F9F9;
-    border-style: solid;
-    border-width: 1px 0;
-	color: #21759B;
-	display: block;
-	font-size: 13px;
-    font-weight: bold;
-    line-height: 18px;
-    min-width: 10em;
-    padding: 5px;
-	text-decoration: none;
-}
-.submenu { 
-    background-color: #ECECEC;
-    cursor: pointer;
-    margin: 0;
-    min-height: 29px;
-    padding: 0;
-    position: relative;
-}
-.submenu:hover { 
-	background-color: #e4e4e4;
-	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4)
-}
-
-.submenu .BoxContents { background-color: inherit; }
-
-form input[type="text"], form select {
-    background: none repeat scroll 0 0 #FBFBFB;
-    border: 1px solid #E5E5E5;
-    box-shadow: 1px 1px 2px rgba(200, 200, 200, 0.2) inset;
-    outline: medium none;
-    padding: 3px;
-
-td font { font-family: 'Source Sans Pro', sans-serif !important; }
-
-a.column_heading { color:#464646; }
-
-body#side { background-color: #ECECEC; }
-

@@ -2,6 +2,8 @@
 
 if($_REQUEST['modfunc']=='save')
 {
+    include('gentranscript.php');
+/*    
 	if(count($_REQUEST['mp_arr']) && count($_REQUEST['st_arr']))
 	{
 	$mp_list = '\''.implode('\',\'',$_REQUEST['mp_type_arr']).'\'';
@@ -11,13 +13,13 @@ if($_REQUEST['modfunc']=='save')
 
 	$extra['SELECT'] = ",sg1.SYEAR,rpg.TITLE as GRADE_TITLE,rpg.GPA_VALUE,sg1.STUDENT_ID,sg1.COURSE_PERIOD_ID,sg1.MARKING_PERIOD_ID,c.TITLE as COURSE_TITLE,cp.CREDITS,cp.MP,sgc.WEIGHTED_GPA,sgc.CLASS_RANK,ssm.GRADE_ID as STU_GRADE,
 				cp.DOES_ATTENDANCE,
-				(SELECT count(*) FROM attendance_period ap,ATTENDANCE_CODES ac
+				(SELECT count(*) FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac
 					WHERE ac.ID=ap.ATTENDANCE_CODE AND ac.STATE_CODE='A' AND ap.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND ap.STUDENT_ID=ssm.STUDENT_ID) AS YTD_ABSENCES";
 
 	$extra['FROM'] = ",STUDENT_REPORT_CARD_GRADES sg1 LEFT OUTER JOIN REPORT_CARD_GRADES rpg ON (rpg.ID=sg1.REPORT_CARD_GRADE_ID),
 					COURSE_PERIODS cp,COURSES c,STUDENT_GPA_CALCULATED sgc,SCHOOL_PERIODS sp";
 	$extra['WHERE'] .= " AND sg1.MARKING_PERIOD_ID IN (".$mp_list.")
-                    AND ssm.STUDENT_ID=sgc.STUDENT_ID AND sg1.MARKING_PERIOD_ID=cast(sgc.MARKING_PERIOD_ID AS CHAR) AND cp.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND c.COURSE_ID = cp.COURSE_ID AND sg1.STUDENT_ID=ssm.STUDENT_ID AND sp.PERIOD_ID=cp.PERIOD_ID";
+                    AND ssm.STUDENT_ID=sgc.STUDENT_ID AND sg1.MARKING_PERIOD_ID=cast(sgc.MARKING_PERIOD_ID AS TEXT) AND cp.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND c.COURSE_ID = cp.COURSE_ID AND sg1.STUDENT_ID=ssm.STUDENT_ID AND sp.PERIOD_ID=cp.PERIOD_ID";
 	$extra['ORDER'] = ",sp.SORT_ORDER,c.TITLE";
 
 	$extra['group']	= array('STUDENT_ID','SYEAR','COURSE_PERIOD_ID','MARKING_PERIOD_ID');
@@ -90,7 +92,7 @@ if($_REQUEST['modfunc']=='save')
 						$grades_RET[$i]['ABSENCES'] = 'n/a';
 				}
 				$columns['COURSE_TITLE'] = $syear.' - '.($syear+1);
-				ListOutput($grades_RET,$columns,'.','.',array(),array(),array('print'=>false,'center'=>false));
+				ListOutput($grades_RET,$columns,'','',array(),array(),array('print'=>false,'center'=>false));
 				echo '<TABLE>';
 				foreach($_REQUEST['mp_arr'] as $mp)
 				{
@@ -108,6 +110,7 @@ if($_REQUEST['modfunc']=='save')
 	}
 	else
 		BackPrompt(_('You must choose at least one student and marking period'));
+*/
 }
 
 if(!$_REQUEST['modfunc'])
@@ -116,8 +119,8 @@ if(!$_REQUEST['modfunc'])
 
 	if($_REQUEST['search_modfunc']=='list')
 	{
-		echo "<FORM action=modules/Grades/gentranscript.php method=POST>";
-		$extra['header_right'] = '<INPUT type=submit value="'._('Create Transcripts for Selected Students').'">';
+		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=save&include_inactive=$_REQUEST[include_inactive]&_CENTRE_PDF=true method=POST>";
+        $extra['header_right'] = '<INPUT type=submit value="'._('Create Transcripts for Selected Students').'">';
 
 		$extra['extra_header_left'] = '<TABLE>';
 

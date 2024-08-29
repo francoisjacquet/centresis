@@ -40,9 +40,9 @@ $extra['SELECT'] .= ',ssm.NEXT_SCHOOL,ssm.CALENDAR_ID,ssm.SYEAR,ssm.SCHOOL_ID AS
 if($_REQUEST['fields']['FIRST_INIT'])
 	$extra['SELECT'] .= ',substr(s.FIRST_NAME,1,1) AS FIRST_INIT';
 if($_REQUEST['fields']['GIVEN_NAME'])
-	$extra['SELECT'] .= ",CONCAT(s.LAST_NAME,', ',s.FIRST_NAME,' ',coalesce(s.MIDDLE_NAME,' ')) AS GIVEN_NAME";
+	$extra['SELECT'] .= ",s.LAST_NAME||', '||s.FIRST_NAME||' '||coalesce(s.MIDDLE_NAME,' ') AS GIVEN_NAME";
 if($_REQUEST['fields']['COMMON_NAME'])
-	$extra['SELECT'] .= ",CONCAT(s.LAST_NAME,', ',coalesce(s.CUSTOM_200000002,s.FIRST_NAME)) AS COMMON_NAME";
+	$extra['SELECT'] .= ",s.LAST_NAME||', '||coalesce(s.CUSTOM_200000002,s.FIRST_NAME) AS COMMON_NAME";
 
 if(!$extra['functions'])
 	$extra['functions'] = array('NEXT_SCHOOL'=>'_makeNextSchool','CALENDAR_ID'=>'_makeCalendar','SCHOOL_ID'=>'GetSchool','SCHOOL_NUMBER'=>'GetSchool','PARENTS'=>'makeParents','LAST_LOGIN'=>'makeLogin');
@@ -61,7 +61,7 @@ if($_REQUEST['search_modfunc']=='list')
 			$fields_list['PERIOD_'.$period['PERIOD_ID']] = $period['TITLE'].' '._('Teacher').' - '._('Room');
 	}
 
-	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE FROM CUSTOM_FIELDS WHERE ID!='200000002' ORDER BY SORT_ORDER,TITLE"),array(),array('ID'));
+	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND ID!='200000002' ORDER BY SORT_ORDER,TITLE"),array(),array('ID'));
 
 	foreach($custom_RET as $id=>$field)
 	{
@@ -69,7 +69,7 @@ if($_REQUEST['search_modfunc']=='list')
 			$fields_list['CUSTOM_'.$id] = $field[1]['TITLE'];
 	}
 
-	$address_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE FROM address_fields ORDER BY SORT_ORDER,TITLE"),array(),array('ID'));
+	$address_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE FROM ADDRESS_FIELDS ORDER BY SORT_ORDER,TITLE"),array(),array('ID'));
 
 	foreach($address_RET as $id=>$field)
 	{
@@ -96,12 +96,12 @@ if($_REQUEST['fields']['START_DATE'] || $_REQUEST['fields']['END_DATE'] || $_REQ
 		$date = DBDate();
 
 	if($_REQUEST['fields']['PERIOD_ATTENDANCE'])
-		$extra['SELECT'] .= ',(SELECT CONCAT(st.FIRST_NAME,\' \',st.LAST_NAME,\' - \',coalesce(cp.ROOM,\' \')) FROM staff st,SCHEDULE ss,COURSE_PERIODS cp,SCHOOL_PERIODS p WHERE ss.STUDENT_ID=ssm.STUDENT_ID AND cp.COURSE_PERIOD_ID=ss.COURSE_PERIOD_ID AND cp.TEACHER_ID=st.STAFF_ID AND cp.PERIOD_ID=p.PERIOD_ID AND (\''.$date.'\' BETWEEN ss.START_DATE AND ss.END_DATE OR \''.$date.'\'>=ss.START_DATE AND ss.END_DATE IS NULL) AND ss.MARKING_PERIOD_ID IN ('.GetAllMP('QTR',GetCurrentMP('QTR',$date)).') AND p.ATTENDANCE=\'Y\') AS PERIOD_ATTENDANCE';
+		$extra['SELECT'] .= ',(SELECT st.FIRST_NAME||\' \'||st.LAST_NAME||\' - \'||coalesce(cp.ROOM,\' \') FROM STAFF st,SCHEDULE ss,COURSE_PERIODS cp,SCHOOL_PERIODS p WHERE ss.STUDENT_ID=ssm.STUDENT_ID AND cp.COURSE_PERIOD_ID=ss.COURSE_PERIOD_ID AND cp.TEACHER_ID=st.STAFF_ID AND cp.PERIOD_ID=p.PERIOD_ID AND (\''.$date.'\' BETWEEN ss.START_DATE AND ss.END_DATE OR \''.$date.'\'>=ss.START_DATE AND ss.END_DATE IS NULL) AND ss.MARKING_PERIOD_ID IN ('.GetAllMP('QTR',GetCurrentMP('QTR',$date)).') AND p.ATTENDANCE=\'Y\') AS PERIOD_ATTENDANCE';
 	foreach($periods_RET as $period)
 	{
 		if($_REQUEST['fields']['PERIOD_'.$period['PERIOD_ID']]=='Y')
 		{
-			$extra['SELECT'] .= ',array(SELECT CONCAT(st.FIRST_NAME,\' \',st.LAST_NAME,\' - \',coalesce(cp.ROOM,\' \')) FROM staff st,SCHEDULE ss,COURSE_PERIODS cp WHERE ss.STUDENT_ID=ssm.STUDENT_ID AND cp.COURSE_PERIOD_ID=ss.COURSE_PERIOD_ID AND cp.TEACHER_ID=st.STAFF_ID AND cp.PERIOD_ID=\''.$period['PERIOD_ID'].'\' AND (\''.$date.'\' BETWEEN ss.START_DATE AND ss.END_DATE OR \''.$date.'\'>=ss.START_DATE AND ss.END_DATE IS NULL) AND ss.MARKING_PERIOD_ID IN ('.GetAllMP('QTR',GetCurrentMP('QTR',$date)).')) AS PERIOD_'.$period['PERIOD_ID'];
+			$extra['SELECT'] .= ',array(SELECT st.FIRST_NAME||\' \'||st.LAST_NAME||\' - \'||coalesce(cp.ROOM,\' \') FROM STAFF st,SCHEDULE ss,COURSE_PERIODS cp WHERE ss.STUDENT_ID=ssm.STUDENT_ID AND cp.COURSE_PERIOD_ID=ss.COURSE_PERIOD_ID AND cp.TEACHER_ID=st.STAFF_ID AND cp.PERIOD_ID=\''.$period['PERIOD_ID'].'\' AND (\''.$date.'\' BETWEEN ss.START_DATE AND ss.END_DATE OR \''.$date.'\'>=ss.START_DATE AND ss.END_DATE IS NULL) AND ss.MARKING_PERIOD_ID IN ('.GetAllMP('QTR',GetCurrentMP('QTR',$date)).')) AS PERIOD_'.$period['PERIOD_ID'];
 			$extra['functions']['PERIOD_'.$period['PERIOD_ID']] = '_makeTeachers';
 		}
 	}
@@ -190,8 +190,8 @@ else
 		if(AllowUse('Students/Student.php&category_id=3'))
 		{
 			$fields_list['Address'] = array('ADDRESS'=>_('Address'),'MAIL_ADDRESS'=>_('Mailing Address'),'CITY'=>_('City'),'MAIL_CITY'=>_('Mailing City'),'STATE'=>_('State'),'MAIL_STATE'=>_('Mailing State'),'ZIPCODE'=>_('Zip Code'),'MAIL_ZIPCODE'=>_('Mailing Zipcode'),'PHONE'=>_('Home Phone'),'PARENTS'=>_('Contacts'));
-			$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM address_field_categories ORDER BY SORT_ORDER,TITLE"));
-			$address_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE,CATEGORY_ID FROM address_fields ORDER BY SORT_ORDER,TITLE"),array(),array('CATEGORY_ID'));
+			$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM ADDRESS_FIELD_CATEGORIES ORDER BY SORT_ORDER,TITLE"));
+			$address_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE,CATEGORY_ID FROM ADDRESS_FIELDS ORDER BY SORT_ORDER,TITLE"),array(),array('CATEGORY_ID'));
 
 			foreach($categories_RET as $category)
 			{
@@ -206,7 +206,7 @@ else
 	}
 
 	$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM STUDENT_FIELD_CATEGORIES ORDER BY SORT_ORDER,TITLE"));
-	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE,CATEGORY_ID FROM CUSTOM_FIELDS ORDER BY SORT_ORDER,TITLE"),array(),array('CATEGORY_ID'));
+	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID,TYPE,CATEGORY_ID FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' ORDER BY SORT_ORDER,TITLE"),array(),array('CATEGORY_ID'));
 
 	foreach($categories_RET as $category)
 	{

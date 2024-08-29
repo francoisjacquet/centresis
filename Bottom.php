@@ -30,7 +30,7 @@ if($_REQUEST['modfunc']=='print')
 		$fp=@fopen($temphtml,"w+");
 		if (!$fp)
 			die("Can't open $temphtml");
-		fputs($fp,'<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><HTML xmlns="http://www.w3.org/1999/xhtml"><HEAD><TITLE></TITLE></HEAD><BODY>'.$html.'</BODY></HTML>');
+		fputs($fp,'<HTML><HEAD><TITLE></TITLE></HEAD><BODY>'.$html.'</BODY></HTML>');
 		@fclose($fp);
 
 		header("Cache-Control: public");
@@ -51,13 +51,13 @@ if($_REQUEST['modfunc']=='print')
 	{
 		$html = eregi_replace('</?CENTER>','',ob_get_contents());
 		ob_end_clean();
-		echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><HTML xmlns="http://www.w3.org/1999/xhtml"><HEAD><TITLE></TITLE></HEAD><BODY>'.$html.'</BODY></HTML>';
+		echo '<HTML><HEAD><TITLE></TITLE></HEAD><BODY>'.$html.'</BODY></HTML>';
 	}
 }
 else
 {
 	echo "
-	<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'><HTML xmlns='http://www.w3.org/1999/xhtml'>
+	<HTML>
 		<HEAD><TITLE>"._('Centre School Software')."</TITLE>
         <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" />
 		<SCRIPT>
@@ -102,7 +102,7 @@ else
 	}
     echo '<TD width=24><A HREF=Bottom.php?modfunc=print target=body><IMG SRC=assets/print.gif border=0 vspace=0></A></TD><TD valign=middle class=BottomButton><A HREF=Bottom.php?modfunc=print target=body>'._('Print').'</A></TD>';
 //    echo '<TD><A HREF=# onclick=expandFrame();return false;><IMG SRC=assets/help.gif border=0 vspace=0></A></TD><TD valign=middle class=BottomButton><A HREF=# onclick="expandFrame();return false;">'._('Help').'</A></TD>';
-    echo '<TD><A HREF=index.php?modfunc=logout target=_top><IMG SRC=assets/logout.gif border=0 vspace=0 hspace=0></A></TD><TD valign=middle class=BottomButton><A HREF=index.php?modfunc=logout target=_top>'._('Logout').'</A></TD></TR></TABLE>';
+    echo '<TD><A HREF=index.php?modfunc=logout target=_parent><IMG SRC=assets/logout.gif border=0 vspace=0 hspace=0></A></TD><TD valign=middle class=BottomButton><A HREF=index.php?modfunc=logout target=_parent>'._('Logout').'</A></TD></TR></TABLE>';
 	echo '<BR><BR>';
 	echo '</CENTER>';
 

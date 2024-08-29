@@ -16,7 +16,7 @@ function MyWidgets($item)
 			$options = array('1'=>_('January'),'2'=>_('February'),'3'=>_('March'),'4'=>_('April'),'5'=>_('May'),'6'=>_('June'),'7'=>_('July'),'8'=>_('August'),'9'=>_('September'),'10'=>_('October'),'11'=>_('November'),'12'=>_('December'));
 			if($_REQUEST['birthmonth'])
 			{
-				$extra['SELECT'] .= ",DATE_FORMAT(s.CUSTOM_200000004,'%b %d') AS BIRTHMONTH";
+				$extra['SELECT'] .= ",to_char(s.CUSTOM_200000004,'Mon DD') AS BIRTHMONTH";
 				$extra['WHERE'] .= " AND extract(month from s.CUSTOM_200000004)='$_REQUEST[birthmonth]'";
 				$extra['columns_after']['BIRTHMONTH'] = _('Birth Month Day');
 				if(!$extra['NoSearchTerms'])

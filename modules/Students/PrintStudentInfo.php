@@ -19,7 +19,7 @@ if($_REQUEST['modfunc']=='save')
 		$categories_RET = DBGet(DBQuery("SELECT ID,TITLE,INCLUDE FROM STUDENT_FIELD_CATEGORIES ORDER BY SORT_ORDER,TITLE"),array(),array('ID'));
 
 		// get the address and contacts custom fields, create the select lists and expand select and codeds options
-		$address_categories_RET = DBGet(DBQuery("SELECT c.ID AS CATEGORY_ID,c.TITLE AS CATEGORY_TITLE,c.RESIDENCE,c.MAILING,c.BUS,f.ID,f.TITLE,f.TYPE,f.SELECT_OPTIONS,f.DEFAULT_SELECTION,f.REQUIRED FROM address_field_categories c,ADDRESS_FIELDS f WHERE f.CATEGORY_ID=c.ID ORDER BY c.SORT_ORDER,c.TITLE,f.SORT_ORDER,f.TITLE"),array(),array('CATEGORY_ID'));
+		$address_categories_RET = DBGet(DBQuery("SELECT c.ID AS CATEGORY_ID,c.TITLE AS CATEGORY_TITLE,c.RESIDENCE,c.MAILING,c.BUS,f.ID,f.TITLE,f.TYPE,f.SELECT_OPTIONS,f.DEFAULT_SELECTION,f.REQUIRED FROM ADDRESS_FIELD_CATEGORIES c,ADDRESS_FIELDS f WHERE f.CATEGORY_ID=c.ID ORDER BY c.SORT_ORDER,c.TITLE,f.SORT_ORDER,f.TITLE"),array(),array('CATEGORY_ID'));
 		$people_categories_RET = DBGet(DBQuery("SELECT c.ID AS CATEGORY_ID,c.TITLE AS CATEGORY_TITLE,c.CUSTODY,c.EMERGENCY,f.ID,f.TITLE,f.TYPE,f.SELECT_OPTIONS,f.DEFAULT_SELECTION,f.REQUIRED FROM PEOPLE_FIELD_CATEGORIES c,PEOPLE_FIELDS f WHERE f.CATEGORY_ID=c.ID ORDER BY c.SORT_ORDER,c.TITLE,f.SORT_ORDER,f.TITLE"),array(),array('CATEGORY_ID'));
 		explodeCustom($address_categories_RET, $address_custom, 'a');
 		explodeCustom($people_categories_RET, $people_custom, 'p');
@@ -31,18 +31,12 @@ if($_REQUEST['modfunc']=='save')
 			$_SESSION['student_id'] = $student['STUDENT_ID'];
 			unset($_CENTRE['DrawHeader']);
 
-			echo '<font face="\'lucida sans unicode\'" size=2.4>';
-			echo '<style>.sub-header tbody tr td, .sub-header tr td { font-size:14px !important; } .sub-header tr td { line-height: 18px; } </style>';
-
 			if($_REQUEST['mailing_labels']=='Y')
 				echo '<BR><BR><BR>';
 			DrawHeader(Config('TITLE').' '._('Student Info'));
-			#DrawHeader($student['FULL_NAME'],GetSchool(UserSchool()));
-			echo '<TABLE width=100% border=0 cellpadding=3 cellspacing=0><TR><TD border=0 bgcolor=#000000 align="left"><font color="#FFFFFF">'.$student['FULL_NAME'].'</font></TD><TD border=0 bgcolor=#000000 align="right"><font color="#FFFFFF">'.GetSchool(UserSchool()).'</font></TD></TR></TABLE>';
-			echo '<TABLE width=100% border=0 cellpadding=3 cellspacing=0><TR><TD bgcolor=#efeff2 align="left" border=0><font color="#000000">'.$student['STUDENT_ID'].'</font></TD><TD bgcolor=#efeff2 border=0 align="right"><font color="#000000">'.GetGrade($student['GRADE_ID']).'</font></TD></TR></TABLE>';
-			echo '<TABLE width=100% border=0 cellpadding=3 cellspacing=0><TR><TD border=0 bgcolor=#efeff2 align="left"><font color="#000000">'.ProperDate(DBDate()).'</font></TD></TR></TABLE>';
-			#DrawHeader($student['STUDENT_ID'],GetGrade($student['GRADE_ID']));
-			#DrawHeader(ProperDate(DBDate()));
+			DrawHeader($student['FULL_NAME'],GetSchool(UserSchool()));
+			DrawHeader($student['STUDENT_ID'],GetGrade($student['GRADE_ID']));
+			DrawHeader(ProperDate(DBDate()));
 
 			if($_REQUEST['mailing_labels']=='Y')
 				echo '<BR><BR><TABLE width=100%><TR><TD width=50> &nbsp; </TD><TD>'.$student['MAILING_LABEL'].'</TD></TR></TABLE><BR>';
@@ -53,18 +47,16 @@ if($_REQUEST['modfunc']=='save')
 
 			if($_REQUEST['category']['3'])
 			{
-			#DrawHeader($categories_RET['3'][1]['TITLE']);
-			echo '<TABLE width=100% border=1 cellpadding=3 cellspacing=0><TR><TD bgcolor=#000000 width=100%><font color="#FFFFFF">'.$categories_RET['3'][1]['TITLE'].'</font></TD></TR></TABLE>';
-			$addresses_RET = DBGet(DBQuery("SELECT a.ADDRESS_ID, sjp.STUDENT_RELATION,a.ADDRESS,a.CITY,a.STATE,a.ZIPCODE,a.PHONE,a.MAIL_ADDRESS,a.MAIL_CITY,a.MAIL_STATE, a.MAIL_ZIPCODE,  sjp.CUSTODY,sja.MAILING,sja.RESIDENCE,sja.BUS_PICKUP,sja.BUS_DROPOFF,".db_case(array('a.ADDRESS_ID',"'0'",'1','0'))."AS SORT_ORDER$address_custom FROM address a,STUDENTS_JOIN_ADDRESS sja,STUDENTS_JOIN_PEOPLE sjp WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND sja.STUDENT_ID='".UserStudentID()."' AND a.ADDRESS_ID=sjp.ADDRESS_ID AND sjp.STUDENT_ID=sja.STUDENT_ID
-						  UNION SELECT a.ADDRESS_ID,'No Contacts' AS STUDENT_RELATION,a.ADDRESS,a.CITY,a.STATE,a.ZIPCODE,a.PHONE,a.MAIL_ADDRESS,a.MAIL_CITY,a.MAIL_STATE, a.MAIL_ZIPCODE,'' AS CUSTODY,sja.MAILING,sja.RESIDENCE,sja.BUS_PICKUP,sja.BUS_DROPOFF,".db_case(array('a.ADDRESS_ID',"'0'",'1','0'))."AS SORT_ORDER$address_custom FROM address a,STUDENTS_JOIN_ADDRESS sja                          WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND sja.STUDENT_ID='".UserStudentID()."' AND NOT EXISTS (SELECT '' FROM STUDENTS_JOIN_PEOPLE sjp WHERE sjp.STUDENT_ID=sja.STUDENT_ID AND sjp.ADDRESS_ID=a.ADDRESS_ID) ORDER BY ADDRESS_ID ASC"));
+			DrawHeader($categories_RET['3'][1]['TITLE']);
+			$addresses_RET = DBGet(DBQuery("SELECT a.ADDRESS_ID,             sjp.STUDENT_RELATION,a.ADDRESS,a.CITY,a.STATE,a.ZIPCODE,a.PHONE,a.MAIL_ADDRESS,a.MAIL_CITY,a.MAIL_STATE,A.MAIL_ZIPCODE,  sjp.CUSTODY,sja.MAILING,sja.RESIDENCE,sja.BUS_PICKUP,sja.BUS_DROPOFF,".db_case(array('a.ADDRESS_ID',"'0'",'1','0'))."AS SORT_ORDER$address_custom FROM ADDRESS a,STUDENTS_JOIN_ADDRESS sja,STUDENTS_JOIN_PEOPLE sjp WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND sja.STUDENT_ID='".UserStudentID()."' AND a.ADDRESS_ID=sjp.ADDRESS_ID AND sjp.STUDENT_ID=sja.STUDENT_ID
+						  UNION SELECT a.ADDRESS_ID,'No Contacts' AS STUDENT_RELATION,a.ADDRESS,a.CITY,a.STATE,a.ZIPCODE,a.PHONE,a.MAIL_ADDRESS,a.MAIL_CITY,a.MAIL_STATE,A.MAIL_ZIPCODE,'' AS CUSTODY,sja.MAILING,sja.RESIDENCE,sja.BUS_PICKUP,sja.BUS_DROPOFF,".db_case(array('a.ADDRESS_ID',"'0'",'1','0'))."AS SORT_ORDER$address_custom FROM ADDRESS a,STUDENTS_JOIN_ADDRESS sja                          WHERE a.ADDRESS_ID=sja.ADDRESS_ID AND sja.STUDENT_ID='".UserStudentID()."' AND NOT EXISTS (SELECT '' FROM STUDENTS_JOIN_PEOPLE sjp WHERE sjp.STUDENT_ID=sja.STUDENT_ID AND sjp.ADDRESS_ID=a.ADDRESS_ID) ORDER BY SORT_ORDER,RESIDENCE,CUSTODY,STUDENT_RELATION"));
 			$address_previous = "x";
 			foreach($addresses_RET as $address)
 			{
 				$address_current = $address['ADDRESS'];
-				
 				if($address_current != $address_previous)
 				{
-					echo '<TABLE width=100% border=1 cellpadding=3 cellspacing=0><TR><TD bgcolor="#FFFFCC" width=100%>'.$address['ADDRESS'].'<BR>'.($address['CITY']?$address['CITY'].', ':'').$address['STATE'].($address['ZIPCODE']?' '.$address['ZIPCODE']:'').'</TD></TR></TABLE>';
+					echo $address['ADDRESS'].'<BR>'.($address['CITY']?$address['CITY'].', ':'').$address['STATE'].($address['ZIPCODE']?' '.$address['ZIPCODE']:'').'<BR>';
 					foreach($address_categories_RET as $categories)
 					{
 						echo '<TABLE>';
@@ -75,14 +67,14 @@ if($_REQUEST['modfunc']=='save')
 					$contacts_RET = DBGet(DBQuery("SELECT p.PERSON_ID,p.FIRST_NAME,p.MIDDLE_NAME,p.LAST_NAME,sjp.CUSTODY,sjp.EMERGENCY,sjp.STUDENT_RELATION$people_custom FROM PEOPLE p,STUDENTS_JOIN_PEOPLE sjp WHERE p.PERSON_ID=sjp.PERSON_ID AND sjp.STUDENT_ID='".UserStudentID()."' AND sjp.ADDRESS_ID='".$address['ADDRESS_ID']."'"));
 					foreach($contacts_RET as $contact)
 					{
-						echo '<BR><B>'.$contact['FIRST_NAME'].' '.($contact['MIDDLE_NAME']?$contact['MIDDLE_NAME'].' ':'').$contact['LAST_NAME'].($contact['STUDENT_RELATION']?': '.$contact['STUDENT_RELATION']:'').' &nbsp;</B><BR>';
+						echo '<B>'.$contact['FIRST_NAME'].' '.($contact['MIDDLE_NAME']?$contact['MIDDLE_NAME'].' ':'').$contact['LAST_NAME'].($contact['STUDENT_RELATION']?': '.$contact['STUDENT_RELATION']:'').' &nbsp;</B><BR>';
 						$info_RET = DBGet(DBQuery("SELECT ID,TITLE,VALUE FROM PEOPLE_JOIN_CONTACTS WHERE PERSON_ID='".$contact['PERSON_ID']."'"));
 						echo '<TABLE>';
 						foreach($info_RET as $info)
 						{
 							echo '<TR><TD>&nbsp;</TD>';
-							echo ($info['VALUE']!="") ? '<TD>'.$info['TITLE'].'</TD>' : '';
-							echo ($info['VALUE']) ? '<TD>'.$info['VALUE'].'</TD>' : '';
+							echo '<TD>'.$info['TITLE'].'</TD>';
+							echo '<TD>'.$info['VALUE'].'</TD>';
 							echo '</TR>';
 						}
 
@@ -239,7 +231,7 @@ function explodeCustom(&$categories_RET, &$custom, $prefix)
 
 function printCustom(&$categories, &$values)
 {
-	#echo '<TR><TD colspan=3>'.$categories[1]['CATEGORY_TITLE'].'</TD></TR>';
+	echo '<TR><TD colspan=3>'.$categories[1]['CATEGORY_TITLE'].'</TD></TR>';
 	foreach($categories as $field)
 	{
 		echo '<TR><TD>&nbsp;</TD>';

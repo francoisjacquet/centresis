@@ -1,4 +1,9 @@
 <?php
+if (file_exists(dirname(__FILE__).'/ReportCards-Custom.php')) {
+    include(dirname(__FILE__).'/ReportCards-Custom.php');
+    die;
+}
+
 include 'modules/Grades/config.inc.php';
 
 if($_REQUEST['modfunc']=='save')
@@ -13,23 +18,20 @@ if($_REQUEST['modfunc']=='save')
 	$extra['SELECT'] .= ",sg1.GRADE_LETTER as GRADE_TITLE,sg1.GRADE_PERCENT,sg1.COMMENT as COMMENT_TITLE,sg1.STUDENT_ID,sg1.COURSE_PERIOD_ID,sg1.MARKING_PERIOD_ID,sg1.COURSE_TITLE as COURSE_TITLE,rc_cp.TITLE AS TEACHER,sp.SORT_ORDER";
 	if($_REQUEST['elements']['period_absences']=='Y')
 		$extra['SELECT'] .= ",rc_cp.DOES_ATTENDANCE,
-				(SELECT count(*) FROM attendance_period ap,ATTENDANCE_CODES ac
+				(SELECT count(*) FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac
 					WHERE ac.ID=ap.ATTENDANCE_CODE AND ac.STATE_CODE='A' AND ap.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND ap.STUDENT_ID=ssm.STUDENT_ID) AS YTD_ABSENCES,
 				(SELECT count(*) FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac
 					WHERE ac.ID=ap.ATTENDANCE_CODE AND ac.STATE_CODE='A' AND ap.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND sg1.MARKING_PERIOD_ID=ap.MARKING_PERIOD_ID AND ap.STUDENT_ID=ssm.STUDENT_ID) AS MP_ABSENCES";
         if($_REQUEST['elements']['comments']=='Y')
                 $extra['SELECT'] .= ',s.CUSTOM_200000000 AS GENDER,s.CUSTOM_200000002 AS NICKNAME';
-	$extra['FROM'] .= ",STUDENT_REPORT_CARD_GRADES sg1,COURSE_PERIODS rc_cp,SCHOOL_PERIODS sp";
+	$extra['FROM'] .= ",STUDENT_REPORT_CARD_GRADES sg1,ATTENDANCE_CODES ac,COURSE_PERIODS rc_cp,SCHOOL_PERIODS sp";
 	$extra['WHERE'] .= " AND sg1.MARKING_PERIOD_ID IN (".$mp_list.")
 					AND rc_cp.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND sg1.STUDENT_ID=ssm.STUDENT_ID AND sp.PERIOD_ID=rc_cp.PERIOD_ID";
-					//AND rc_cp.COURSE_PERIOD_ID='".UserCoursePeriod()."'";
-	$extra['ORDER'] .= ",sp.SORT_ORDER";
-	$extra['functions']['TEACHER'] = '_makeTeacher';
+	$extra['ORDER'] .= ",sp.SORT_ORDER,ac.TITLE";
+	$extra['functions']['TEACHER'] = '_makeDefTeacher';
 	$extra['group']	= array('STUDENT_ID','COURSE_PERIOD_ID','MARKING_PERIOD_ID');
 
 	$RET = GetStuList($extra);
-
-	//echo '<pre>'; print_r($RET); echo '</pre>'; exit();
 
 	if($_REQUEST['elements']['comments']=='Y')
 	{
@@ -235,7 +237,7 @@ if($_REQUEST['modfunc']=='save')
 				}
 				echo '<BR>';
 
-				ListOutput($grades_RET,$columns,'.','.',array(),array(),array('print'=>false));
+				ListOutput($grades_RET,$columns,'','',array(),array(),array('print'=>false));
 				if($_REQUEST['elements']['comments']=='Y' && ($comments_arr_key || count($comments_arr)))
 				{
 					$gender = substr($mps[key($mps)][1]['GENDER'],0,1);
@@ -280,10 +282,10 @@ if(!$_REQUEST['modfunc'])
 
 	if($_REQUEST['search_modfunc']=='list')
 	{
-		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=save&include_inactive=$_REQUEST[include_inactive]&_CENTRE_PDF=true  method=POST>";
+		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=save&include_inactive=$_REQUEST[include_inactive]&_CENTRE_PDF=true method=POST>";
 		$extra['header_right'] = '<INPUT type=submit value=\'Create Report Cards for Selected Students\'>';
 
-		$attendance_codes = DBGet(DBQuery("SELECT SHORT_NAME,ID FROM attendance_codes WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND (DEFAULT_CODE!='Y' OR DEFAULT_CODE IS NULL) AND TABLE_NAME='0'"));
+		$attendance_codes = DBGet(DBQuery("SELECT SHORT_NAME,ID FROM ATTENDANCE_CODES WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND (DEFAULT_CODE!='Y' OR DEFAULT_CODE IS NULL) AND TABLE_NAME='0'"));
 
 		$extra['extra_header_left'] = '<TABLE>';
 		$extra['extra_header_left'] .= '<TR><TD colspan=2><b>'.Localize('colon',_('Include on Report Card')).'</b></TD></TR>';
@@ -356,7 +358,7 @@ if(!$_REQUEST['modfunc'])
 
 	$extra['link'] = array('FULL_NAME'=>false);
 	$extra['SELECT'] = ",s.STUDENT_ID AS CHECKBOX";
-	$extra['functions'] = array('CHECKBOX'=>'_makeChooseCheckbox');
+	$extra['functions'] = array('CHECKBOX'=>'_makeDefChooseCheckbox');
 	$extra['columns_before'] = array('CHECKBOX'=>'</A><INPUT type=checkbox value=Y name=controller checked onclick="checkAll(this.form,this.form.controller.checked,\'st_arr\');"><A>');
 	$extra['options']['search'] = false;
 	$extra['new'] = true;
@@ -375,12 +377,12 @@ if(!$_REQUEST['modfunc'])
 	}
 }
 
-function _makeChooseCheckbox($value,$title)
+function _makeDefChooseCheckbox($value,$title)
 {
 	return '<INPUT type=checkbox name=st_arr[] value='.$value.' checked>';
 }
 
-function _makeTeacher($teacher,$column)
+function _makeDefTeacher($teacher,$column)
 {
 	return substr($teacher,strrpos(str_replace(' - ',' ^ ',$teacher),'^')+2);
 }

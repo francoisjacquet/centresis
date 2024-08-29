@@ -1,14 +1,14 @@
 <?php
 DrawHeader('Pre-Defined Student Billing Fees');
- 
+
 if($_REQUEST[modfunc]=='update')
 {
-	$_REQUEST['date'] = date("Y-m-d", strtotime($_REQUEST['day'] . '-' . $_REQUEST['month'] . '-' . $_REQUEST['year']));
+	$_REQUEST['date'] = $_REQUEST['day'] . '-' . $_REQUEST['month'] . '-' . $_REQUEST['year'];
 	if($_REQUEST['date']=='--')
 		$_REQUEST['date']='';
 	$effective_date = DBDate();
 	$sql = "INSERT INTO STU_BILLING_DEFINED_FEES (ID,ACCOUNT_ID,TITLE,AMOUNT,DUE_DATE,SYEAR,SCHOOL,GRADE) 
-			values(".db_nextval('STU_BILLING_DEFINED_FEES').",'$_REQUEST[account_id]','$_REQUEST[title]','$_REQUEST[amount]','$_REQUEST[date]','$_REQUEST[syear]','$_REQUEST[school]','$_REQUEST[grade]')";
+			values(".db_seq_nextval('STU_BILLING_DEFINED_FEES_SEQ').",'$_REQUEST[account_id]','$_REQUEST[title]','$_REQUEST[amount]','$_REQUEST[date]','$_REQUEST[syear]','$_REQUEST[school]','$_REQUEST[grade]')";
 	DBQuery($sql);
 
 	$note[] = 'That Pre-Defined Fee has been added';
@@ -38,7 +38,7 @@ if(!$_REQUEST[modfunc])
 	
 	$functions = array('AMOUNT'=>'Currency','ACCOUNT_ID'=>'getAccount','DUE_DATE'=>'ProperDate','SYEAR'=>'DispYear','SCHOOL'=>'GetSchool','GRADE'=>'GetGrade');
 	$RET = DBGet(DBQuery('SELECT DISTINCT sb.ID,sb.TITLE,sb.AMOUNT,
-							DATE_FORMAT(sb.DUE_DATE,\'%d-%b-%y\') as DUE_DATE,sb.SYEAR,sb.SCHOOL,sb.GRADE,sb.ACCOUNT_ID 
+							to_char(sb.DUE_DATE,\'dd-MON-yy\') as DUE_DATE,sb.SYEAR,sb.SCHOOL,sb.GRADE,sb.ACCOUNT_ID 
 						FROM STU_BILLING_DEFINED_FEES sb ORDER BY sb.TITLE'),$functions);
 		
 	$columns = array('TITLE'=>'Title','AMOUNT'=>'Amount','ACCOUNT_ID'=>'Account','DUE_DATE'=>'Due Date','SYEAR'=>'School Year','SCHOOL'=>'School','GRADE'=>'Grade');

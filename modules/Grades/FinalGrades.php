@@ -25,9 +25,9 @@ if($_REQUEST['modfunc']=='save')
 	$extra['SELECT'] .= ",rpg.TITLE as GRADE_TITLE,sg1.GRADE_PERCENT,sg1.COMMENT as COMMENT_TITLE,sg1.STUDENT_ID,sg1.COURSE_PERIOD_ID,sg1.MARKING_PERIOD_ID,c.TITLE as COURSE_TITLE,rc_cp.TITLE AS TEACHER,sp.SORT_ORDER";
 	if($_REQUEST['elements']['period_absences']=='Y')
 		$extra['SELECT'] .= ",rc_cp.DOES_ATTENDANCE,
-				(SELECT count(*) FROM attendance_period ap,ATTENDANCE_CODES ac
+				(SELECT count(*) FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac
 					WHERE ac.ID=ap.ATTENDANCE_CODE AND ac.STATE_CODE='A' AND ap.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND ap.STUDENT_ID=ssm.STUDENT_ID) AS YTD_ABSENCES,
-				(SELECT count(*) FROM attendance_period ap,ATTENDANCE_CODES ac
+				(SELECT count(*) FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac
 					WHERE ac.ID=ap.ATTENDANCE_CODE AND ac.STATE_CODE='A' AND ap.COURSE_PERIOD_ID=sg1.COURSE_PERIOD_ID AND sg1.MARKING_PERIOD_ID=ap.MARKING_PERIOD_ID AND ap.STUDENT_ID=ssm.STUDENT_ID) AS MP_ABSENCES";
 	if($_REQUEST['elements']['comments']=='Y')
 		$extra['SELECT'] .= ',sg1.MARKING_PERIOD_ID AS COMMENTS_RET';
@@ -130,7 +130,7 @@ if($_REQUEST['modfunc']=='save')
 					}
 				}
 				if($_REQUEST['elements']['period_absences']=='Y')
-					if(strpos($mps[$last_mp][1]['DOES_ATTENDANCE'],',0,')!==false || strpos($mps[$last_mp][1]['DOES_ATTENDANCE'],'Y')!==false)
+					if(strpos($mps[$last_mp][1]['DOES_ATTENDANCE'],',0,')!==false)
 						$grades_RET[$i]['ABSENCES'] = $mps[$last_mp][1]['YTD_ABSENCES'].' / '.$mps[$last_mp][1]['MP_ABSENCES'];
 					else
 						$grades_RET[$i]['ABSENCES'] = 'n/a';
@@ -155,7 +155,7 @@ if($_REQUEST['modfunc']=='save')
 			$link['remove']['link'] = PreparePHP_SELF($_REQUEST,array(),array('modfunc'=>'delete'));
 			$link['remove']['variables'] = array('student_id'=>'STUDENT_ID','course_period_id'=>'COURSE_PERIOD_ID','marking_period_id'=>'MARKING_PERIOD_ID');
 		}
-		ListOutput($grades_RET,$columns,'.','.',$link);
+		ListOutput($grades_RET,$columns,'','',$link);
 	}
 	else
 		BackPrompt(_('No Students were found.'));
@@ -175,7 +175,7 @@ if(!$_REQUEST['modfunc'])
 		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=save&include_inactive=$_REQUEST[include_inactive] method=POST>";
 		$extra['header_right'] = SubmitButton(_('Create Grade Lists for Selected Students'));
 
-		$attendance_codes = DBGet(DBQuery("SELECT SHORT_NAME,ID FROM attendance_codes WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND (DEFAULT_CODE!='Y' OR DEFAULT_CODE IS NULL) AND TABLE_NAME='0'"));
+		$attendance_codes = DBGet(DBQuery("SELECT SHORT_NAME,ID FROM ATTENDANCE_CODES WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND (DEFAULT_CODE!='Y' OR DEFAULT_CODE IS NULL) AND TABLE_NAME='0'"));
 
 		$extra['extra_header_left'] = '<TABLE>';
 		$extra['extra_header_left'] .= '<TR><TD colspan=2><b>'.Localize('colon',_('Include on Grade List')).'</b></TD></TR>';

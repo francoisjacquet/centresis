@@ -7,7 +7,6 @@ $menu['Scheduling']['admin'] = array(
 						'Scheduling/MassDrops.php'=>_('Group Drops'),
 						1=>_('Reports'),
 						'Scheduling/PrintSchedules.php'=>_('Print Schedules'),
-						'Scheduling/PrintClassEnrollment.php'=>_('Print Average Class Enrollment'),
 						'Scheduling/PrintClassLists.php'=>_('Print Class Lists'),
 						'Scheduling/PrintClassPictures.php'=>_('Print Class Pictures'),
 						'Scheduling/PrintRequests.php'=>_('Print Requests'),
@@ -17,8 +16,8 @@ $menu['Scheduling']['admin'] = array(
 						'Scheduling/IncompleteSchedules.php'=>_('Incomplete Schedules'),
 						'Scheduling/AddDrop.php'=>_('Add / Drop Report'),
 						2=>_('Setup'),
-						'Scheduling/Courses.php'=>_('Courses')
-						//'Scheduling/Scheduler.php'=>_('Run Scheduler')
+						'Scheduling/Courses.php'=>_('Courses'),
+						'Scheduling/Scheduler.php'=>_('Run Scheduler')
 					);
 
 $menu['Scheduling']['teacher'] = array(

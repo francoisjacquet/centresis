@@ -1,21 +1,5 @@
 <?php
 require('fpdf.php');
-require_once('../../config.inc.php');
-require_once('../../database.inc.php');
-
-// Load functions.
-if($handle = opendir("$CentrePath/functions"))
-{
-    if(!is_array($IgnoreFiles))
-        $IgnoreFiles=Array();
-
-    while (false !== ($file = readdir($handle)))
-    {
-        // if filename isn't '.' '..' or in the Ignore list... load it.
-        if($file != "." && $file != ".." && !in_array($file,$IgnoreFiles))
-            require_once("$CentrePath/functions/$file");
-    }
-}
 
 //these will be replaced by checkboxes on form
 $creditmp='semester';
@@ -46,7 +30,7 @@ s.student_id
 , (select sgl.short_name from school_gradelevels sgl join student_enrollment se on (sgl.id = se.grade_id) where se.syear = ".$_REQUEST['syear']." and se.student_id = s.student_id and (se.end_date is null or se.start_date < se.end_date) order by se.start_date desc limit 1) as grade_level
 from 
 students s  
-left outer join students_join_address sja on (sja.student_id = s.student_id)
+left outer join students_join_address sja on (sja.student_id = s.student_id) and sja.residence = 'Y'
 left outer join address a on (a.address_id = sja.address_id) "; 
 
 function transcript_mp_cmp($a, $b){
@@ -355,8 +339,12 @@ $sch_info = $sch_info[1];
 $t_grades = DBGet(DBQuery('select * from transcript_grades where student_id in ('.$st_list.') and mp_type in ('.$mp_list.') order by end_date, course_title'),array(),array('STUDENT_ID', 'SYEAR', 'MARKING_PERIOD_ID'));                                     
 $s_data = DBGet(DBQuery($studataquery.' where s.student_id in ('.$st_list.') order by last_name, first_name'),array(),array('STUDENT_ID'));
 foreach($s_data as $student_id=>$s_info){
-
     $s_info = $s_info[1];
+    
+    // Noxon Public Schools: transcript only for students in grade 7 or above
+    if (($CentreTitle=='Noxon Public Schools') && ($s_info['GRADE_LEVEL']<7))
+        continue;
+        
     $mp_cum_stats = array();
     $grades = $t_grades[$student_id];
     $pdf->AddPage();
@@ -366,7 +354,7 @@ foreach($s_data as $student_id=>$s_info){
 
     $blockY = $pdf->GetY();
     $blockX = $pdf->GetX();
-    $stu_pic =  $CentrePath.'/'.$StudentPicturesPath.$DefaultSyear.'/'.$student_id.'.JPG';
+    $stu_pic =  FindPicture('student', $student_id);
     $picwidth = 70;
     if (file_exists($stu_pic) && $showStudentPic){
         $pdf->Image($stu_pic,$blockX, $blockY,$picwidth);
@@ -447,7 +435,6 @@ foreach($s_data as $student_id=>$s_info){
     
 
     $garray = array();
-	if(is_array($grades)):
     foreach($grades as $syear=>$rec){
         //when running through each one of these we need to sort the marking periods 
         //for the students' grades on a per student, per year basis
@@ -470,7 +457,6 @@ foreach($s_data as $student_id=>$s_info){
         $garray[$syear]['mp_list'] = $mplist;
         $garray[$syear]['grades'] = $classgrades;  
     }
-	endif;
     
     $xpos=19;
     $ypos=$gradeblockY+1;
@@ -489,6 +475,18 @@ foreach($s_data as $student_id=>$s_info){
     foreach($garray as $syear=>$yinfo){
         $mplist = $yinfo['mp_list'];
         $grades = $yinfo['grades'];
+
+        // Noxon Public Schools: transcript show only grades 7-8, or grades 9-12
+        if ($CentreTitle=='Noxon Public Schools') {
+            $classgrades = reset($grades);
+            $mpgrades = reset($classgrades);
+            while ((!$mpgrades['GRADE_LEVEL_SHORT']) && ($mpgrades = next($classgrades)));
+            if (($s_info['GRADE_LEVEL']<9) && $mpgrades['GRADE_LEVEL_SHORT'] && ($mpgrades['GRADE_LEVEL_SHORT']<7))
+                continue;            
+            if (($s_info['GRADE_LEVEL']>8) && $mpgrades['GRADE_LEVEL_SHORT'] && ($mpgrades['GRADE_LEVEL_SHORT']<9))
+                continue;
+        }
+
         //lets start with 2" available for grades columns
         //$gcolx = (2*72)/count($mplist);
         $gcolx = 26;
@@ -565,8 +563,8 @@ foreach($s_data as $student_id=>$s_info){
                     $mp_cum_stats[$mpid] = array(
                                         'CUM_WEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_WEIGHTED_GPA'],
                                         'CUM_UNWEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_UNWEIGHTED_GPA'],
-                                        'CUM_CR_WEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_WEIGHTED_GPA'],
-                                        'CUM_CR_UNWEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_UNWEIGHTED_GPA'],
+                                        'CUM_CR_WEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_CR_WEIGHTED_GPA'],
+                                        'CUM_CR_UNWEIGHTED_GPA'=>$classgrades[$mp_id]['CUM_CR_UNWEIGHTED_GPA'],
                                         'CUM_RANK'=>$classgrades[$mp_id]['CUM_RANK'],
                                         'CLASS_SIZE'=>$classgrades[$mp_id]['CLASS_SIZE']
                                         
@@ -589,9 +587,9 @@ foreach($s_data as $student_id=>$s_info){
                     $pdf->SetFillColor(240, 240, 240);
                 else
                     $pdf->SetFillColor(255, 255, 255);
-                if ($classgrades[$mpid]['GRADE_PERCENT'])
-                    $percentgrade = round($classgrades[$mpid]['GRADE_PERCENT']);
-                else
+                //if ($classgrades[$mpid]['GRADE_PERCENT'])
+                   // $percentgrade = round($classgrades[$mpid]['GRADE_PERCENT']);
+//              else
                     $percentgrade = '';
                 if (!$classgrades[$mpid]['GRADE_LETTER'])
                     $lettergrade = '';
@@ -637,7 +635,7 @@ foreach($s_data as $student_id=>$s_info){
     $pdf->SetXY(18, $gpablockY); //159-120 = 39
     $pdf->SetStyle('celldata');
     // GPA and CLASS Rank IS DISPLAYED WITH THE NEXT LINE OF CODE.
-    $pdf->Cell(3.75*72, 16, "GPA: ".sprintf('%01.2f', round($mp_cum_stats[$mp_id]['CUM_UNWEIGHTED_GPA'], 2)).(($mp_cum_stats[$mp_id]['CUM_RANK'])?"  Class Rank: ".$mp_cum_stats[$mp_id]['CUM_RANK']." of ".$mp_cum_stats[$mp_id]['CLASS_SIZE']:''), 0, 1, 'C');
+    $pdf->Cell(3.75*72, 16, "GPA: ".sprintf('%01.2f', round($mp_cum_stats[$mp_id][$overall_cumulative_gpa], 2)).(($mp_cum_stats[$mp_id]['CUM_RANK'])?"  Class Rank: ".$mp_cum_stats[$mp_id]['CUM_RANK']." of ".$mp_cum_stats[$mp_id]['CLASS_SIZE']:''), 0, 1, 'C');
     $pdf->Cell(3.75*72, 16, "Total Credit -- Attempted: ".sprintf('%01.2f', $total_cred_att+$total_ex_cred_att)."  Earned: ".sprintf('%01.2f', $total_cred_earned+$total_ex_cred_earned), 0, 'B', 'C');
     $pdf->RoundedRect(18,$gpablockY,3.75*72, 32, 5,'','');
                         

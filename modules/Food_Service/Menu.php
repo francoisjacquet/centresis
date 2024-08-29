@@ -10,11 +10,11 @@ $menu['Food_Service']['admin'] = array(
 						'Food_Service/MenuReports.php'=>_('Meal Reports'),
                         'Food_Service/BalanceReport.php'=>_('Balance Report'),
 						'Food_Service/Reminders.php'=>_('Reminders'),
-						2=>_('Setup')
-						// 'Food_Service/DailyMenus.php'=>_('Daily Menus'),
-						// 'Food_Service/MenuItems.php'=>_('Meal Items'),
-						// 'Food_Service/Menus.php'=>_('Meals'),
-						// 'Food_Service/Kiosk.php'=>_('Kiosk Preview')
+						2=>_('Setup'),
+						'Food_Service/DailyMenus.php'=>_('Daily Menus'),
+						'Food_Service/MenuItems.php'=>_('Meal Items'),
+						'Food_Service/Menus.php'=>_('Meals'),
+						'Food_Service/Kiosk.php'=>_('Kiosk Preview')
 //						3=>'Utilities',
 //						'Food_Service/AssignSchool.php'=>'Assign School'
 					);

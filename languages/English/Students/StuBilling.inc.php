@@ -10,7 +10,7 @@ $editor = $_REQUEST[editor];
 
 if($_REQUEST[stumodfunc]=='add_fee')
 {
-	$new_date = date("Y-m-d", strtotime($_REQUEST[day_new_fee].'-'.$_REQUEST[month_new_fee].'-'.$_REQUEST[year_new_fee]));
+	$new_date = $_REQUEST[day_new_fee].'-'.$_REQUEST[month_new_fee].'-'.$_REQUEST[year_new_fee];
 	if($new_date=='--')
 		$new_date = '';
 	if($_REQUEST['defined'])
@@ -18,17 +18,17 @@ if($_REQUEST[stumodfunc]=='add_fee')
 		$sql = "SELECT SYEAR,TITLE,AMOUNT,DUE_DATE,ACCOUNT_ID FROM STU_BILLING_DEFINED_FEES WHERE ID='$_REQUEST[defined]'";
 		$defined = DBGet(DBQuery($sql));
 		$defined = $defined[1];
-		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,TITLE,AMOUNT,DUE_DATE,EFFECTIVE_DATE,DEFINED_ID,ACCOUNT_ID) values(".db_nextval('STU_BILLING_FEES').",'$defined[SYEAR]','$student_id','$defined[TITLE]','$defined[AMOUNT]','$defined[DUE_DATE]','".DBDate()."','$_REQUEST[defined]','$defined[ACCOUNT_ID]')");
+		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,TITLE,AMOUNT,DUE_DATE,EFFECTIVE_DATE,DEFINED_ID,ACCOUNT_ID) values(".db_seq_nextval('STU_BILLING_FEES_SEQ').",'$defined[SYEAR]','$student_id','$defined[TITLE]','$defined[AMOUNT]','$defined[DUE_DATE]','".DBDate()."','$_REQUEST[defined]','$defined[ACCOUNT_ID]')");
 	}
 	else
-		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,TITLE,AMOUNT,DUE_DATE,EFFECTIVE_DATE,ACCOUNT_ID) values(".db_nextval('STU_BILLING_FEES').",'$_REQUEST[f_year]','$student_id','$_REQUEST[new_fee_title]','".str_replace('$','',str_replace(',','',$_REQUEST[new_fee_amount]))."','$new_date','".DBDate()."','$_REQUEST[account_id]')");
+		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,TITLE,AMOUNT,DUE_DATE,EFFECTIVE_DATE,ACCOUNT_ID) values(".db_seq_nextval('STU_BILLING_FEES_SEQ').",'$_REQUEST[f_year]','$student_id','$_REQUEST[new_fee_title]','".str_replace('$','',str_replace(',','',$_REQUEST[new_fee_amount]))."','$new_date','".DBDate()."','$_REQUEST[account_id]')");
 	$note[] = 'That Fee has been Added';
 	$_REQUEST[stumodfunc] = '';
 }
 
 if($_REQUEST[stumodfunc]=='add_payment')
 {
-	$new_date = date("Y-m-d", strtotime($_REQUEST[day_new_payment].'-'.$_REQUEST[month_new_payment].'-'.$_REQUEST[year_new_payment]));
+	$new_date = $_REQUEST[day_new_payment].'-'.$_REQUEST[month_new_payment].'-'.$_REQUEST[year_new_payment];
 	if($new_date=='--')
 		$new_date = '';
 	$_REQUEST[payment]['new'] = str_replace('$','',str_replace(',','',$_REQUEST[payment]['new']));
@@ -36,7 +36,7 @@ if($_REQUEST[stumodfunc]=='add_payment')
 	{
 		if($editor=='lunch')
 			$lunch = 'Y';
-		DBQuery("INSERT INTO STU_BILLING_ACT (ID,SYEAR,STUDENT_ID,AMOUNT,PAYMENT_DATE,LUNCH_PAYMENT,ACT_COMMENT,ACCOUNT_ID) values(".db_nextval('STU_BILLING_ACT').",'$_REQUEST[f_year]','$student_id','{$_REQUEST[payment]['new']}','".$new_date."','$lunch','$_REQUEST[act_comment]','$_REQUEST[account_id]')");
+		DBQuery("INSERT INTO STU_BILLING_ACT (ID,SYEAR,STUDENT_ID,AMOUNT,PAYMENT_DATE,LUNCH_PAYMENT,ACT_COMMENT,ACCOUNT_ID) values(".db_seq_nextval('STU_BILLING_ACT_SEQ').",'$_REQUEST[f_year]','$student_id','{$_REQUEST[payment]['new']}','".$new_date."','$lunch','$_REQUEST[act_comment]','$_REQUEST[account_id]')");
 		$note[] = 'That Payment has been Added';
 	}
 	$_REQUEST[stumodfunc] = '';
@@ -96,7 +96,7 @@ if($_REQUEST[stumodfunc]=='forgive_fee')
 		$QI = DBQuery($sql);
 		$RET = DBGet($QI);
 	
-		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,EFFECTIVE_DATE,TITLE,AMOUNT,FORGIVEN_FEE_ID,ACCOUNT_ID) values(".db_nextval('STU_BILLING_FEES').",'$_REQUEST[f_year]','$student_id','".DBDate()."','Waived Fee: ".$RET[1][TITLE]." (".SessionUserID().")','".(0-$RET[1][AMOUNT])."','$_REQUEST[fee_id]','".$RET[1][ACCOUNT_ID]."')");
+		DBQuery("INSERT INTO STU_BILLING_FEES (ID,SYEAR,STUDENT_ID,EFFECTIVE_DATE,TITLE,AMOUNT,FORGIVEN_FEE_ID,ACCOUNT_ID) values(".db_seq_nextval('STU_BILLING_FEES_SEQ').",'$_REQUEST[f_year]','$student_id','".DBDate()."','Waived Fee: ".$RET[1][TITLE]." (".SessionUserID().")','".(0-$RET[1][AMOUNT])."','$_REQUEST[fee_id]','".$RET[1][ACCOUNT_ID]."')");
 		$note[] = 'That Fee has been Waived';
 	}
 	else
@@ -220,7 +220,7 @@ if($_REQUEST[stumodfunc]=='')
 	if($editor=='lunch')
 	{
 		$sql = "$previous_debit
-				SELECT sbf.TITLE,sbf.ID,sbf.AMOUNT,cast('' as varchar(1)) as REMOVE,DATE_FORMAT(PAYMENT_DATE,'%Y-%m-%d') as SB_DATE
+				SELECT sbf.TITLE,sbf.ID,sbf.AMOUNT,cast('' as varchar(1)) as REMOVE,to_char(PAYMENT_DATE,'dd-MON-yy') as SB_DATE
 				FROM STU_BILLING_ACT_LUNCH sbf
 				WHERE sbf.SYEAR='$_REQUEST[f_year]' AND sbf.STUDENT_ID = '$student_id'
 				ORDER BY PAYMENT_DATE ASC";
@@ -228,7 +228,7 @@ if($_REQUEST[stumodfunc]=='')
 	else
 	{
 		$sql = "$previous_debit
-					SELECT sbf.FORGIVEN_FEE_ID,sbf.ACCOUNT_ID,sbf.TITLE,sbf.ID,sbf.AMOUNT,DATE_FORMAT(sbf.DUE_DATE,'%Y-%m-%d') as SB_DATE,sbf.STUDENT_ID,
+					SELECT sbf.FORGIVEN_FEE_ID,sbf.ACCOUNT_ID,sbf.TITLE,sbf.ID,sbf.AMOUNT,to_char(sbf.DUE_DATE,'dd-MON-yy') as SB_DATE,sbf.STUDENT_ID,
 					cast('' as varchar(1)) as REMOVE
 					FROM STU_BILLING_FEES sbf,".STU_SCHOOL_MEETS." ssm 
 					WHERE 
@@ -281,7 +281,7 @@ if($_REQUEST[stumodfunc]=='')
 		$functions['ACCOUNT_ID'] = 'getAccount';
 		
 	$sql = "$previous_credit
-			SELECT sba.ACCOUNT_ID,sba.ID,DATE_FORMAT(sba.PAYMENT_DATE,'%Y-%m-%d') as PAYMENT_DATE,sba.AMOUNT,
+			SELECT sba.ACCOUNT_ID,sba.ID,to_char(sba.PAYMENT_DATE,'dd-MON-yy') as PAYMENT_DATE,sba.AMOUNT,
 						sba.ACT_COMMENT
 				FROM STU_BILLING_ACT sba 
 				WHERE sba.STUDENT_ID = '$student_id' AND sba.SYEAR='$_REQUEST[f_year]'";

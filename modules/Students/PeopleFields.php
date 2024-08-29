@@ -30,11 +30,11 @@ if($_REQUEST['tables'] && $_POST['tables'])
 					$_REQUEST['category_id'] = $columns['CATEGORY_ID'];
 					unset($columns['CATEGORY_ID']);
 				}
-				//$id = DBGet(DBQuery("SELECT ".db_nextval('PEOPLE_FIELDS').' AS ID '.FROM_DUAL));
-				$id = db_nextval('PEOPLE_FIELDS');
-				$fields = "CATEGORY_ID,";
-				$values = "'".$_REQUEST['category_id']."',";
-				$_REQUEST['id'] = ($id!="") ? $id : '1';
+				$id = DBGet(DBQuery("SELECT ".db_seq_nextval('PEOPLE_FIELDS_SEQ').' AS ID '.FROM_DUAL));
+				$id = $id[1]['ID'];
+				$fields = "ID,CATEGORY_ID,";
+				$values = $id.",'".$_REQUEST['category_id']."',";
+				$_REQUEST['id'] = $id;
 
 				switch($columns['TYPE'])
 				{
@@ -71,14 +71,13 @@ if($_REQUEST['tables'] && $_POST['tables'])
 					break;
 				}
 				DBQuery("CREATE INDEX PEOPLE_IND$id ON PEOPLE (CUSTOM_$id)");
-				//DBQuery("INSERT INTO PEOPLE_FIELDS (id, type, search, title, sort_order, select_options, category_id, system_field, required, default_selection, description) VALUES (NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)");
 			}
 			elseif($table=='PEOPLE_FIELD_CATEGORIES')
 			{
-				//$id = DBGet(DBQuery("SELECT ".db_nextval('PEOPLE_FIELD_CATEGORIES').' AS ID '.FROM_DUAL));
-				$id = db_nextval('PEOPLE_FIELD_CATEGORIES');
-				$fields = "";
-				$values = "";
+				$id = DBGet(DBQuery("SELECT ".db_seq_nextval('PEOPLE_FIELD_CATEGORIES_SEQ').' AS ID '.FROM_DUAL));
+				$id = $id[1]['ID'];
+				$fields = "ID,";
+				$values = $id.",";
 				$_REQUEST['category_id'] = $id;
 			}
 

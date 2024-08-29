@@ -23,7 +23,7 @@ if ($_REQUEST['modfunc']=='submit')
 			$items_RET = DBGet(DBQuery("SELECT DESCRIPTION,SHORT_NAME,PRICE_STAFF FROM FOOD_SERVICE_ITEMS WHERE SCHOOL_ID='".UserSchool()."'"),array(),array('SHORT_NAME'));
 
 			// get next transaction id
-			$id = DBGet(DBQuery('SELECT '.db_nextval('FOOD_SERVICE_STAFF_TRANSACTIONS').' AS SEQ_ID '.FROM_DUAL));
+			$id = DBGet(DBQuery('SELECT '.db_seq_nextval('FOOD_SERVICE_STAFF_TRANSACTIONS_SEQ').' AS SEQ_ID '.FROM_DUAL));
 			$id = $id[1]['SEQ_ID'];
 
 			$item_id = 0;
@@ -66,7 +66,7 @@ if ($_REQUEST['modfunc']=='submit')
 
 if(UserStaffID() && !$_REQUEST['modfunc'])
 {
-	$staff = DBGet(DBQuery("SELECT s.STAFF_ID,CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS FULL_NAME,(SELECT STAFF_ID FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS ACCOUNT_ID,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM staff s WHERE s.STAFF_ID='".UserStaffID()."'"));
+	$staff = DBGet(DBQuery("SELECT s.STAFF_ID,s.FIRST_NAME||' '||s.LAST_NAME AS FULL_NAME,(SELECT STAFF_ID FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS ACCOUNT_ID,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM STAFF s WHERE s.STAFF_ID='".UserStaffID()."'"));
 	$staff = $staff[1];
 
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=submit&menu_id=$_REQUEST[menu_id] method=POST>";
@@ -94,11 +94,9 @@ if(UserStaffID() && !$_REQUEST['modfunc'])
 		ListOutput($RET,$columns,$singular,$plural,$link,false,array('save'=>false,'search'=>false));
 
 		// IMAGE
-		if($file = @fopen($picture=$UserPicturesPath.'/'.UserSyear().'/'.UserStaffID().'.JPG','r') || $file = @fopen($picture=$UserPicturesPath.'/'.(UserSyear()-1).'/'.UserStaffID().'.JPG','r'))
-		{
-			fclose($file);
-			echo '<TD rowspan=2 width=150 align=left><IMG SRC="'.$picture.'" width=150></TD>';
-		}
+        $picture_path = FindPicture('user', UserStaffID());
+        if (!empty($picture_path))
+			echo '<TD rowspan=2 width=150 align=left><IMG SRC="'.$picture_path.'" width=150></TD>';
 
 		echo '</TD></TR>';
 		echo '<TR><TD width=100% valign=top>';

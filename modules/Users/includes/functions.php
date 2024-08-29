@@ -115,7 +115,7 @@ function _makeAutoSelectInput($column,$name,$request='staff')
 	if($field['TYPE']=='autos' && AllowEdit()) // we don't really need the select list if we can't edit anyway
 	{
 		// add values found in current and previous year
-		$options_RET = DBGet(DBQuery("SELECT DISTINCT s.CUSTOM_$field[ID],upper(s.CUSTOM_$field[ID]) AS KEY FROM staff s WHERE (s.SYEAR='".UserSyear()."' OR s.SYEAR='".(UserSyear()-1)."') AND s.CUSTOM_$field[ID] IS NOT NULL ORDER BY KEY"));
+		$options_RET = DBGet(DBQuery("SELECT DISTINCT s.CUSTOM_$field[ID],upper(s.CUSTOM_$field[ID]) AS KEY FROM STAFF s WHERE (s.SYEAR='".UserSyear()."' OR s.SYEAR='".(UserSyear()-1)."') AND s.CUSTOM_$field[ID] IS NOT NULL ORDER BY KEY"));
 		if(count($options_RET))
 		{
 			foreach($options_RET as $option)
@@ -213,7 +213,7 @@ function _makeMultipleInput($column,$name,$request='staff')
 		if($value[$column]!='')
 		{
 			echo '","div'.$request.'['.$column.']",true);\' >';
-			echo '<span style=\'border-bottom-style:dotted;border-bottom-width:1px;border-bottom-color:'.Preferences('TITLES').';\'>'.($value[$column]!=''?str_replace('||',', ',substr($value[$column],2,-2)):'-').'</span>';
+			echo '<span style=\'border-bottom-style:dotted;border-bottom-width:1;border-bottom-color:'.Preferences('TITLES').';\'>'.($value[$column]!=''?str_replace('||',', ',substr($value[$column],2,-2)):'-').'</span>';
 			echo '</div></DIV>';
 		}
 	}

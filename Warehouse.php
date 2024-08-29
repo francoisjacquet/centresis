@@ -2,39 +2,24 @@
 if(WAREHOUSE_PHP==0)
 {
 	define("WAREHOUSE_PHP",1);
-    $CentreVersion = '4.5.7';
-	$staticpath = dirname(__FILE__).'/';
+    $staticpath = dirname(__FILE__).'/';
+    if (file_exists($staticpath."version.txt"))
+        $CentreVersion = "SaaS build ".file_get_contents($staticpath."version.txt");
+    else
+        $CentreVersion = "SaaS dvlp";
 
     if (!file_exists ($staticpath."config.inc.php"))
-        die ('
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>Centre/SIS &#8250; ReadMe</title>
-	<link rel="stylesheet" href="cs-admin/css/install.css" type="text/css" />
-</head>
-<body>
-<h1 id="logo">
-	<a target="_blank" href="http://centresis.org/"><img alt="Centre/SIS" src="assets/themes/Modern/centre_logo.png" /></a>
-	<br /> Version 4.5
-</h1>
-<p style="text-align: center">Centre School Information System</p>
-<p><strong>Error</strong>: config.inc.php not found. <br>Please check <a href="README.php">README.php</a> file or read the configuration guide at <a href="http://doc.centresis.org">http://doc.centresis.org</a></p>
-</body>
-</html>');
+        die ('config.inc.php not found. Please read the configuration guide at <a href="http://doc.centresis.org">http://doc.centresis.org</a>');
 	require_once($staticpath."config.inc.php");
     $CentrePath = $staticpath;
-	require_once("database.inc.php");
 
-	// Check if Tables have been imported
-	if(!defined('TBL_STAFF')) { define('TBL_STAFF', "staff"); }
-	$res = db_fetch_row(DBQuery("SHOW TABLES LIKE '".TBL_STAFF."'"));
-		if( count($res) <= 0 ) {
-			header('Location: cs-admin/install.php');
-		}
+    // Load Nu-Coder license
+    if (!pelm_load_license($CentrePath."centre.lic"))
+        pelm_load_license($CentrePath."../server.lic");
+    // calls to check the license have to be made in a licensed file
+    // so ... these are included in function/DBGet.php
 
-	// Load functions.
+	// Load functions
 	if($handle = opendir("$CentrePath/functions"))
 	{
 		if(!is_array($IgnoreFiles))
@@ -48,11 +33,35 @@ if(WAREHOUSE_PHP==0)
 		}
 	}
 
+    // Database functions & schema updates
+    require_once("database.inc.php");
+    require_once("database.php");
+
+    // Check that the license is valid
+    // Note: Checks on IP, hostname and all are performed automatically by PHP-Express
+    // Note: These functions are defined in functions/License.php
+    if (LicenseIsActive()) {
+        $licensed = true;
+        if (($_SESSION['STAFF_ID'] || $_SESSION['STUDENT_ID']) && LicenseAttribute('Schools') !== FALSE) {
+            $licensed = false;
+            $RET = DBGet(DBQuery("SELECT TITLE FROM SCHOOLS WHERE SYEAR='".UserSyear()."'"." AND ID='".UserSchool()."'"));
+            $currentSchool = $RET[1]['TITLE'];
+            foreach (explode('||',LicenseAttribute('Schools')) as $school)
+                $licensed = $licensed || ($school == $currentSchool);
+        }
+        if (!$licensed) die(_('The software license is incorrect.').' '._('Please call Centre SIS technical support.'));
+    }    
+
+    // Load hooks
+    foreach ($CentreModules as $module => $status)
+        if ($status && is_readable($CentrePath."/modules/$module/Hooks.php"))
+            require_once($CentrePath."/modules/$module/Hooks.php");
+
 	// Start Session.
-	#session_cache_limiter('private_no_expire');
     session_name('CentreSIS');
     if ($_SERVER['SCRIPT_NAME']!='/index.php')
         session_set_cookie_params(0,dirname($_SERVER['SCRIPT_NAME']).'/'); //,'',$false,$true);
+    ini_set('session.gc_maxlifetime',(isset($SessionTimeout)?$SessionTimeout*60:30*60));
 	session_start();
 	if(!$_SESSION['STAFF_ID'] && !$_SESSION['PERSON_ID'] && !$_SESSION['STUDENT_ID'] && strpos($_SERVER['PHP_SELF'],'index.php')===false)
 	{
@@ -62,7 +71,7 @@ if(WAREHOUSE_PHP==0)
 
     // Internationalization
     if (!empty($_GET['locale'])) $_SESSION['locale'] = $_GET['locale'];
-    $locale = $_SESSION['locale'].'.utf8';
+    $locale = $_SESSION['locale'];
     putenv("LC_ALL=$locale");
     setlocale(LC_ALL, $locale);
     bindtextdomain("centre", $LocalePath);    //binds the messages domain to the locale folder
@@ -75,7 +84,7 @@ if(WAREHOUSE_PHP==0)
 		switch($mode)
 		{
 			case 'header':
-                echo '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><HTML'.(substr($locale,0,2)=='he'?' dir="RTL"':'').' xmlns="http://www.w3.org/1999/xhtml">';
+                echo '<HTML'.(substr($locale,0,2)=='he'?' dir="RTL"':'').'>';
                 echo "<HEAD><TITLE>$CentreTitle</TITLE>";
                 echo "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" />";
 				if(basename($_SERVER['PHP_SELF'])!='index.php')
@@ -274,7 +283,7 @@ if(WAREHOUSE_PHP==0)
 									document.getElementById(id+'_arrow').src = 'assets/arrow_right.gif';
 								}
 							}
-
+                            
                             function setMLvalue(id,loc,value)
                             {
                                 res = document.getElementById(id).value.split('|');
@@ -297,11 +306,32 @@ if(WAREHOUSE_PHP==0)
                                                 res[i] = loc+':'+value;
                                             }
                                         }
-                                    }
+                                    }    
                                     if ((found == 0) && (value != '')) res.push(loc+':'+value);
                                 }
-                                document.getElementById(id).value = res.join('|');
+                                document.getElementById(id).value = res.join('|');                                
                             }
+
+                            function setAmount(sel,box)
+                            {
+                                var str=sel.options[sel.selectedIndex].text.match(/\(.*\)/);
+                                if(str!=null)
+                                    box.value=str[0].slice(2,-1).replace(',','').replace('.00','');
+                            }
+
+                            function toggleFlag(field_id,flag,icon_id,tips)
+                            {
+                                if (document.getElementById(field_id).value.indexOf(flag) < 0) {
+                                    document.getElementById(icon_id).src = document.getElementById(icon_id).src.replace('-off.gif','-on.gif');
+                                    document.getElementById(icon_id).title = tips[1];
+                                    document.getElementById(field_id).value = document.getElementById(field_id).value + flag;
+                                } else {
+                                    document.getElementById(icon_id).src = document.getElementById(icon_id).src.replace('-on.gif','-off.gif');
+                                    document.getElementById(icon_id).title = tips[0];
+                                    document.getElementById(field_id).value = document.getElementById(field_id).value.replace(flag,'');
+                                }
+                            }
+
 						</script>
 					</HEAD>
 					<link rel=stylesheet type=text/css href=assets/themes/".Preferences('THEME')."/stylesheet.css>";
@@ -322,7 +352,7 @@ echo '  <link rel="stylesheet" type="text/css" media="all" href="assets/jscalend
 					monthField     :    "monthSelect'.$i.'",
 					dayField       :    "daySelect'.$i.'",
 					yearField      :    "yearSelect'.$i.'",
-					ifFormat       :    "%d-%m-%y",
+					ifFormat       :    "%d-%b-%y",
 					button         :    "trigger'.$i.'",
 					align          :    "Tl",
 					singleClick    :    true

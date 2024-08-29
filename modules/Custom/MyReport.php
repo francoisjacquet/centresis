@@ -6,13 +6,13 @@ if(!$_REQUEST['modfunc'])
 {
 	if($_REQUEST['search_modfunc']=='list')
 	{
-		$address_fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE FROM address_fields"));
+		$address_fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE FROM ADDRESS_FIELDS"));
 		$people_fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE FROM PEOPLE_FIELDS"));
 		$extra['SELECT'] = ",s.CUSTOM_200000000,s.CUSTOM_200000001";
 		$extra['SELECT'] .= ",a.ADDRESS,a.CITY,a.STATE,a.ZIPCODE,a.MAIL_ADDRESS,a.MAIL_CITY,a.MAIL_STATE,a.MAIL_ZIPCODE,a.PHONE";
 		foreach($address_fields_RET as $field)
 			$extra['SELECT'] .= ",a.CUSTOM_".$field['ID']." AS ADDRESS_".$field['ID'];
-		$extra['SELECT'] .= ",p.PERSON_ID,CONCAT(p.FIRST_NAME,' ',p.LAST_NAME) AS PERSON_NAME";
+		$extra['SELECT'] .= ",p.PERSON_ID,p.FIRST_NAME||' '||p.LAST_NAME AS PERSON_NAME";
 		foreach($people_fields_RET as $field)
 			$extra['SELECT'] .= ",p.CUSTOM_".$field['ID']." AS PEOPLE_".$field['ID'];
 		$extra['functions'] = array();

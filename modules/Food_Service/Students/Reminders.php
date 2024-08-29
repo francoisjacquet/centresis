@@ -26,22 +26,22 @@ if($_REQUEST['modfunc']=='save')
 	{
 	$st_list = "'".implode("','",$_REQUEST['st_arr'])."'";
 
-	$students = DBGet(DBQuery("SELECT s.STUDENT_ID,s.FIRST_NAME,s.LAST_NAME,s.MIDDLE_NAME,s.NAME_SUFFIX,s.CUSTOM_200000002 AS NICKNAME,s.CUSTOM_200000000 AS GENDER,fsa.ACCOUNT_ID,fsa.STATUS,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE,(SELECT TITLE FROM SCHOOLS WHERE ID=ssm.SCHOOL_ID AND SYEAR=ssm.SYEAR) AS SCHOOL,(SELECT TITLE FROM SCHOOL_GRADELEVELS WHERE ID=ssm.GRADE_ID) AS GRADE".($_REQUEST['year_end']=='Y'?",(SELECT count(1) FROM attendance_calendar WHERE CALENDAR_ID=ssm.CALENDAR_ID AND SCHOOL_DATE>CURRENT_DATE) AS DAYS,(SELECT -sum(fsti.AMOUNT) FROM FOOD_SERVICE_TRANSACTIONS fst,FOOD_SERVICE_TRANSACTION_ITEMS fsti WHERE fst.SYEAR=ssm.SYEAR AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.ACCOUNT_ID=fsa.ACCOUNT_ID AND fsti.AMOUNT<0 AND fst.TIMESTAMP BETWEEN CURRENT_DATE-14 AND CURRENT_DATE-1) AS T_AMOUNT,(SELECT count(1) FROM attendance_calendar WHERE CALENDAR_ID=ssm.CALENDAR_ID AND SCHOOL_DATE BETWEEN CURRENT_DATE-14 AND CURRENT_DATE-1) AS T_DAYS":'')." FROM STUDENTS s,STUDENT_ENROLLMENT ssm,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID IN (".$st_list.") AND fsa.STUDENT_ID=s.STUDENT_ID AND ssm.STUDENT_ID=s.STUDENT_ID AND ssm.SYEAR='".UserSyear()."'"));
+	$students = DBGet(DBQuery("SELECT s.STUDENT_ID,s.FIRST_NAME,s.LAST_NAME,s.MIDDLE_NAME,s.NAME_SUFFIX,s.CUSTOM_200000002 AS NICKNAME,s.CUSTOM_200000000 AS GENDER,fsa.ACCOUNT_ID,fsa.STATUS,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE,(SELECT TITLE FROM SCHOOLS WHERE ID=ssm.SCHOOL_ID AND SYEAR=ssm.SYEAR) AS SCHOOL,(SELECT TITLE FROM SCHOOL_GRADELEVELS WHERE ID=ssm.GRADE_ID) AS GRADE".($_REQUEST['year_end']=='Y'?",(SELECT count(1) FROM ATTENDANCE_CALENDAR WHERE CALENDAR_ID=ssm.CALENDAR_ID AND SCHOOL_DATE>CURRENT_DATE) AS DAYS,(SELECT -sum(fsti.AMOUNT) FROM FOOD_SERVICE_TRANSACTIONS fst,FOOD_SERVICE_TRANSACTION_ITEMS fsti WHERE fst.SYEAR=ssm.SYEAR AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.ACCOUNT_ID=fsa.ACCOUNT_ID AND fsti.AMOUNT<0 AND fst.TIMESTAMP BETWEEN CURRENT_DATE-14 AND CURRENT_DATE-1) AS T_AMOUNT,(SELECT count(1) FROM ATTENDANCE_CALENDAR WHERE CALENDAR_ID=ssm.CALENDAR_ID AND SCHOOL_DATE BETWEEN CURRENT_DATE-14 AND CURRENT_DATE-1) AS T_DAYS":'')." FROM STUDENTS s,STUDENT_ENROLLMENT ssm,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID IN (".$st_list.") AND fsa.STUDENT_ID=s.STUDENT_ID AND ssm.STUDENT_ID=s.STUDENT_ID AND ssm.SYEAR='".UserSyear()."'"));
 	$handle = PDFStart();
 	foreach($students as $student)
 	{
 		if($homeroom)
-			$teacher = DBGet(DBQuery("SELECT CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS FULL_NAME,cs.TITLE
-			FROM staff s,SCHEDULE sch,COURSE_PERIODS cp,COURSES c,COURSE_SUBJECTS cs
+			$teacher = DBGet(DBQuery("SELECT s.FIRST_NAME||' '||s.LAST_NAME AS FULL_NAME,cs.TITLE
+			FROM STAFF s,SCHEDULE sch,COURSE_PERIODS cp,COURSES c,COURSE_SUBJECTS cs
 			WHERE s.STAFF_ID=cp.TEACHER_ID AND sch.STUDENT_ID='".$student['STUDENT_ID']."' AND cp.COURSE_ID=sch.COURSE_ID AND c.COURSE_ID=cp.COURSE_ID AND c.SUBJECT_ID=cs.SUBJECT_ID AND cs.TITLE='".$homeroom."' AND sch.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID AND sch.SYEAR='".UserSyear()."'"));
 		else
-			$teacher = DBGet(DBQuery("SELECT CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS FULL_NAME,cs.TITLE
-			FROM staff s,SCHEDULE sch,COURSE_PERIODS cp,COURSES c,COURSE_SUBJECTS cs,SCHOOL_PERIODS sp
+			$teacher = DBGet(DBQuery("SELECT s.FIRST_NAME||' '||s.LAST_NAME AS FULL_NAME,cs.TITLE
+			FROM STAFF s,SCHEDULE sch,COURSE_PERIODS cp,COURSES c,COURSE_SUBJECTS cs,SCHOOL_PERIODS sp
             WHERE s.STAFF_ID=cp.TEACHER_ID AND sch.STUDENT_ID='".$student['STUDENT_ID']."' AND cp.COURSE_ID=sch.COURSE_ID AND c.COURSE_ID=cp.COURSE_ID AND c.SUBJECT_ID=cs.SUBJECT_ID AND sp.PERIOD_ID=cp.PERIOD_ID AND sp.ATTENDANCE='Y' AND sch.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID AND sch.SYEAR='".UserSyear()."'"));
 		$teacher = $teacher[1];
 		$xstudents = DBGet(DBQuery("SELECT s.STUDENT_ID,s.FIRST_NAME,s.LAST_NAME,s.CUSTOM_200000002 AS NICKNAME FROM STUDENTS s,FOOD_SERVICE_STUDENT_ACCOUNTS fssa WHERE fssa.ACCOUNT_ID='".$student['ACCOUNT_ID']."' AND s.STUDENT_ID=fssa.STUDENT_ID AND s.STUDENT_ID!='".$student['STUDENT_ID']."' AND exists(SELECT '' FROM STUDENT_ENROLLMENT WHERE STUDENT_ID=s.STUDENT_ID AND SYEAR='".UserSyear()."' AND (START_DATE<=CURRENT_DATE AND (END_DATE IS NULL OR CURRENT_DATE<=END_DATE)))"));
 
-		$last_deposit = DBGet(DBQuery("SELECT (SELECT sum(AMOUNT) FROM FOOD_SERVICE_TRANSACTION_ITEMS WHERE TRANSACTION_ID=fst.TRANSACTION_ID) AS AMOUNT,DATE_FORMAT(fst.TIMESTAMP,'%Y-%m-%d') AS DATE FROM FOOD_SERVICE_TRANSACTIONS fst WHERE fst.SHORT_NAME='DEPOSIT' AND fst.ACCOUNT_ID='".$student['ACCOUNT_ID']."' AND SYEAR='".UserSyear()."' ORDER BY fst.TRANSACTION_ID DESC LIMIT 1"),array('DATE'=>'ProperDate'));
+		$last_deposit = DBGet(DBQuery("SELECT (SELECT sum(AMOUNT) FROM FOOD_SERVICE_TRANSACTION_ITEMS WHERE TRANSACTION_ID=fst.TRANSACTION_ID) AS AMOUNT,to_char(fst.TIMESTAMP,'YYYY-MM-DD') AS DATE FROM FOOD_SERVICE_TRANSACTIONS fst WHERE fst.SHORT_NAME='DEPOSIT' AND fst.ACCOUNT_ID='".$student['ACCOUNT_ID']."' AND SYEAR='".UserSyear()."' ORDER BY fst.TRANSACTION_ID DESC LIMIT 1"),array('DATE'=>'ProperDate'));
 		$last_deposit = $last_deposit[1];
 
 		if($_REQUEST['year_end']=='Y')
@@ -92,9 +92,9 @@ if(!$_REQUEST['modfunc'])
 	Widgets('fsa_status');
 
 	$extra['SELECT'] .= ',coalesce(fssa.STATUS,\'Active\') AS STATUS,fsa.BALANCE';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_ACCOUNTS WHERE fsa.BALANCE < \''.$warning.'\' AND fsa.BALANCE >= 0 LIMIT 1) AS WARNING';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_ACCOUNTS WHERE fsa.BALANCE < 0 AND fsa.BALANCE >= \''.$minimum.'\' LIMIT 1) AS NEGATIVE';
-	$extra['SELECT'] .= ',(SELECT \'Y\' FROM FOOD_SERVICE_ACCOUNTS WHERE fsa.BALANCE < '.$minimum.' LIMIT 1) AS MINIMUM';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < \''.$warning.'\' AND fsa.BALANCE >= 0) AS WARNING';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < 0 AND fsa.BALANCE >= \''.$minimum.'\') AS NEGATIVE';
+	$extra['SELECT'] .= ',(SELECT \'Y\' WHERE fsa.BALANCE < '.$minimum.') AS MINIMUM';
 	if(!strpos($extra['FROM'],'fssa'))
 	{
 		$extra['FROM'] .= ',FOOD_SERVICE_STUDENT_ACCOUNTS fssa';
@@ -108,7 +108,6 @@ if(!$_REQUEST['modfunc'])
 	$extra['functions'] += array('BALANCE'=>'red','WARNING'=>'x','NEGATIVE'=>'x','MINIMUM'=>'x');
 	$extra['columns_after'] = array('BALANCE'=>_('Balance'),'STATUS'=>_('Status'),'WARNING'=>_('Warning').'<br>'.$warning,'NEGATIVE'=>_('Negative'),'MINIMUM'=>_('Minimum').'<br>'.$minimum);
 
-	$extra['GROUP'] = "s.STUDENT_ID";
 	Search('student_id',$extra);
 	if($_REQUEST['search_modfunc']=='list')
 	{
@@ -176,7 +175,7 @@ function reminder($student,$teacher,$xstudents,$target,$last_deposit,$note)
 	$note = str_replace('%G',($student['GENDER'] ? (substr($student['GENDER'],0,1)=='F' ? 'She' : 'He') : 'He/she'),$note);
 	$note = str_replace('%h',($student['GENDER'] ? (substr($student['GENDER'],0,1)=='F' ? 'her' : 'his') : 'his/her'),$note);
 	$note = str_replace('%H',($student['GENDER'] ? (substr($student['GENDER'],0,1)=='F' ? 'Her' : 'His') : 'His/her'),$note);
-	$note = str_replace('%P',money_formatt('%i',$payment),$note);
+	$note = str_replace('%P',money_format('%i',$payment),$note);
 	$note = str_replace('%T',$target,$note);
 
 	echo '<TR><TD colspan=3>';

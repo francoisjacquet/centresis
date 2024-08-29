@@ -48,7 +48,7 @@ $fields[AS_ISAT] = array('READ_SCALE_SCORE'=>'Scaled Reading Score','MATH_SCALE_
 $fields[AS_ITBS] = array('READ_SCALE_SCORE'=>'Scaled Reading Score','MATH_SCALE_SCORE'=>'Scaled Math Score');
 */
 
-$cust_RET = DBGet(DBQuery("SELECT TITLE,CONCAT('CUSTOM_',ID) as COLUMN_NAME FROM CUSTOM_FIELDS"),array('TITLE'=>'GetCapWords'));
+$cust_RET = DBGet(DBQuery("SELECT TITLE,'CUSTOM_'||ID as COLUMN_NAME FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students'"),array('TITLE'=>'GetCapWords'));
 if(count($cust_RET))
 {
 	foreach($cust_RET as $cust)

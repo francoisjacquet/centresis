@@ -12,7 +12,7 @@ if($_REQUEST['modfunc']=='save')
 	$_CENTRE['Preferences']['Preferences']['NAME'][1]['VALUE'] = '';
 
 	$months = array(1=>_('Jan'),_('Feb'),_('Mar'),_('Apr'),_('May'),_('Jun'),_('Jul'),_('Aug'),_('Sep'),_('Oct'),_('Nov'),_('Dec'));
-	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID FROM CUSTOM_FIELDS WHERE ID IN('200000000','200000003')"),array(),array('ID'));
+	$custom_RET = DBGet(DBQuery("SELECT TITLE,ID FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND ID IN('200000000','200000003')"),array(),array('ID'));
 
 	$extra['SELECT'] = ",ssm.CALENDAR_ID,ssm.START_DATE,ssm.END_DATE";
 	foreach($custom_RET as $id=>$custom)
@@ -29,8 +29,8 @@ if($_REQUEST['modfunc']=='save')
 		$handle = PDFStart($options);
 		foreach($RET as $student)
 		{
-			$calendar_RET = DBGet(DBquery("SELECT ".db_case(array("MINUTES>=300",'true',"'1.0'","'0.5'"))."AS POS,trim(leading '0' from DATE_FORMAT(SCHOOL_DATE,'%m')) AS MON,trim(leading '0' from DATE_FORMAT(SCHOOL_DATE,'%d')) AS DAY FROM attendance_calendar WHERE CALENDAR_ID='".$student['CALENDAR_ID']."' AND SCHOOL_DATE>='".$student['START_DATE']."'".($student['END_DATE']?" AND SCHOOL_DATE<='".$student['END_DATE']."'":'')),array(),array('MON','DAY'));
-			$attendance_RET = DBGet(DBQuery("SELECT trim(leading '0' from DATE_FORMAT(ap.SCHOOL_DATE,'%m')) AS MON,trim(leading '0' from DATE_FORMAT(ap.SCHOOL_DATE,'%d')) AS DAY,ac.STATE_CODE,ac.SHORT_NAME FROM attendance_period ap,ATTENDANCE_CODES ac,SCHOOL_PERIODS sp WHERE ap.STUDENT_ID='".$student['STUDENT_ID']."' AND ap.PERIOD_ID=sp.PERIOD_ID AND sp.SCHOOL_ID='".UserSchool()."' AND sp.SYEAR='".UserSyear()."' AND ac.ID=ap.ATTENDANCE_CODE AND sp.ATTENDANCE='Y'"),array(),array('MON','DAY'));
+			$calendar_RET = DBGet(DBquery("SELECT ".db_case(array("MINUTES>=300",'true',"'1.0'","'0.5'"))."AS POS,trim(leading '0' from to_char(SCHOOL_DATE,'MM')) AS MON,trim(leading '0' from to_char(SCHOOL_DATE,'DD')) AS DAY FROM ATTENDANCE_CALENDAR WHERE CALENDAR_ID='".$student['CALENDAR_ID']."' AND SCHOOL_DATE>='".$student['START_DATE']."'".($student['END_DATE']?" AND SCHOOL_DATE<='".$student['END_DATE']."'":'')),array(),array('MON','DAY'));
+			$attendance_RET = DBGet(DBQuery("SELECT trim(leading '0' from to_char(ap.SCHOOL_DATE,'MM')) AS MON,trim(leading '0' from to_char(ap.SCHOOL_DATE,'DD')) AS DAY,ac.STATE_CODE,ac.SHORT_NAME FROM ATTENDANCE_PERIOD ap,ATTENDANCE_CODES ac,SCHOOL_PERIODS sp WHERE ap.STUDENT_ID='".$student['STUDENT_ID']."' AND ap.PERIOD_ID=sp.PERIOD_ID AND sp.SCHOOL_ID='".UserSchool()."' AND sp.SYEAR='".UserSyear()."' AND ac.ID=ap.ATTENDANCE_CODE AND sp.ATTENDANCE='Y'"),array(),array('MON','DAY'));
 			//echo '<pre>'; var_dump($calendar_RET); echo '</pre>';
 
 			echo '<TABLE width=100% border=1>';
@@ -62,7 +62,7 @@ if($_REQUEST['modfunc']=='save')
 			for($day=1; $day<=31; $day++)
 				echo '<TD><B>'.($day<10?'&nbsp;':'').$day.'</B></TD>';
             /* TRANSLATORS: Abreviations for Absences, Tardy and Position */
-			echo '<TD><B>'._('Abs').'</B><TD><B>'._('Tdy').'</B><TD><B>'._('Pos')'</B></TD></TR>';
+			echo '<TD><B>'._('Abs').'</B><TD><B>'._('Tdy').'</B><TD><B>'._('Pos').'</B></TD></TR>';
 			$abs_tot = $tdy_tot = $pos_tot = 0;
 			foreach(array(7,8,9,10,11,12,1,2,3,4,5,6) as $month)
 			if($month!=7 && $month!=6 || $calendar_RET[$month] || $attendance_RET[$month])
@@ -116,7 +116,7 @@ if($_REQUEST['modfunc']=='save')
 		PDFStop($handle);
 	}
 	else
-		BackPrompt(_('No Students were found.s'));
+		BackPrompt(_('No Students were found.'));
 	}
 	else
 		BackPrompt(_('You must choose at least one student.'));

@@ -1,4 +1,5 @@
 <?php
+
 if($_REQUEST['month_date'] && $_REQUEST['day_date'] && $_REQUEST['year_date'])
 	while(!VerifyDate($date = $_REQUEST['day_date'].'-'.$_REQUEST['month_date'].'-'.$_REQUEST['year_date']))
 		$_REQUEST['day_date']--;
@@ -36,15 +37,18 @@ if($_REQUEST['search_modfunc']=='list')
 {
 $PHP_tmp_SELF = PreparePHP_SELF();
 echo "<FORM action=$PHP_tmp_SELF method=POST>";
-DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date').' : <INPUT type=submit value='._('Go').'>');
+DrawHeader(PrepareDate($date,'_date').' : <INPUT type=submit value='._('Go').'>');
 echo '</FORM>';
+
+include('modules/Food_Service/'.($_REQUEST['type']=='staff' ? 'Users' : 'Students').'/BalanceReport.php');
 }
 
 $extra['new'] = true;
 $extra['force_search'] = true;
 $extra['SELECT'] = ",fsa.ACCOUNT_ID,fst.BALANCE";
+//$extra['SELECT'] .= ",(SELECT BALANCE FROM FOOD_SERVICE_TRANSACTIONS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID AND TIMESTAMP<date '".$date."'+1 ORDER BY TIMESTAMP DESC LIMIT 1) AS BALANCE";
 $extra['FROM'] = ",FOOD_SERVICE_STUDENT_ACCOUNTS fsa,FOOD_SERVICE_TRANSACTIONS fst";
-$extra['WHERE'] = " AND fsa.STUDENT_ID=ssm.STUDENT_ID AND fst.ACCOUNT_ID=fsa.ACCOUNT_ID AND fst.BALANCE>'0' AND fst.TRANSACTION_ID=(SELECT TRANSACTION_ID FROM FOOD_SERVICE_TRANSACTIONS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID AND TIMESTAMP<=date '".strtotime("Y-m-d", $date)."' ORDER BY TIMESTAMP DESC LIMIT 1)";
+$extra['WHERE'] = " AND fsa.STUDENT_ID=ssm.STUDENT_ID AND fst.ACCOUNT_ID=fsa.ACCOUNT_ID AND fst.BALANCE>'0' AND fst.TRANSACTION_ID=(SELECT TRANSACTION_ID FROM FOOD_SERVICE_TRANSACTIONS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID AND TIMESTAMP<date '".$date."'+1 ORDER BY TIMESTAMP DESC LIMIT 1)";
 $extra['functions'] = array('ACCOUNT_ID'=>'_total');
 $extra['columns_before'] = array('ACCOUNT_ID'=>_('Account ID'));
 $extra['columns_after'] = array('BALANCE'=>_('Balance'));

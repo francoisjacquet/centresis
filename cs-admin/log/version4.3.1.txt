@@ -1,7 +1,0 @@
-09272013
-Version 4.3.1
-Fixed `Attendance` Present/Day calculations on minutes
-Fixed `User Preferences` module. List Color
-Added `Notes` module
-
-Added Parents setup login using credentials on the Addresses & Contacts in Students tabs.

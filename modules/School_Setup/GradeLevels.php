@@ -19,7 +19,7 @@ if($_REQUEST['values'] && $_POST['values'])
 			$sql = "INSERT INTO SCHOOL_GRADELEVELS ";
 
 			$fields = 'ID,SCHOOL_ID,';
-			$values = db_nextval('SCHOOL_GRADELEVELS').",'".UserSchool()."',";
+			$values = db_seq_nextval('SCHOOL_GRADELEVELS_SEQ').",'".UserSchool()."',";
 
 			$go = 0;
 			foreach($columns as $column=>$value)
@@ -77,7 +77,7 @@ function makeTextInput($value,$name)
 		$id = 'new';
 	
 	if($name!='TITLE')
-		$extra = 'size=5 maxlength=2';
+		$extra = 'size=5 maxlength=5';
 	if($name=='SORT_ORDER')
 		$comment = '<!-- '.$value.' -->';
 

@@ -10,9 +10,8 @@ if($_REQUEST['values'] && $_POST['values'] && $_REQUEST['save'])
 		if(($_REQUEST['values']['TYPE']=='Deposit' || $_REQUEST['values']['TYPE']=='Credit' || $_REQUEST['values']['TYPE']=='Debit') && ($amount = is_money($_REQUEST['values']['AMOUNT'])))
 		{
 			// get next transaction id
-			//$id = DBGet(DBQuery("SELECT ".db_nextval('FOOD_SERVICE_STAFF_TRANSACTIONS')." AS SEQ_ID ".FROM_DUAL));
-			//$id = $id[1]['SEQ_ID'];
-			$id = db_nextval('FOOD_SERVICE_STAFF_TRANSACTIONS');
+			$id = DBGet(DBQuery("SELECT ".db_seq_nextval('FOOD_SERVICE_STAFF_TRANSACTIONS_SEQ')." AS SEQ_ID ".FROM_DUAL));
+			$id = $id[1]['SEQ_ID'];
 
 			$fields = 'ITEM_ID,TRANSACTION_ID,AMOUNT,SHORT_NAME,DESCRIPTION';
 			$values = "'0','".$id."','".($_REQUEST['values']['TYPE']=='Debit' ? -$amount : $amount)."','".strtoupper($_REQUEST['values']['OPTION'])."','".str_replace("\'","''",$_REQUEST['values']['OPTION'].' '.$_REQUEST['values']['DESCRIPTION'])."'";
@@ -23,10 +22,7 @@ if($_REQUEST['values'] && $_POST['values'] && $_REQUEST['save'])
 			$fields = 'TRANSACTION_ID,SYEAR,SCHOOL_ID,STAFF_ID,BALANCE,TIMESTAMP,SHORT_NAME,DESCRIPTION,SELLER_ID';
 			$values = "'".$id."','".UserSyear()."','".UserSchool()."','".UserStaffID()."',(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID='".UserStaffID()."'),CURRENT_TIMESTAMP,'".strtoupper($_REQUEST['values']['TYPE'])."','".$_REQUEST['values']['TYPE']."','".User('STAFF_ID')."'";
 			$sql2 = "INSERT INTO FOOD_SERVICE_STAFF_TRANSACTIONS (".$fields.") values (".$values.")";
-			//DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT;');
-			DBQuery($sql1);
-			DBQuery($sql2);
-
+			DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT');
 		}
 		else
 			$error = ErrorMessage(array(_('Please enter valid Type and Amount.')));
@@ -52,7 +48,7 @@ Search('staff_id',$extra);
 
 if(UserStaffID() && !$_REQUEST['modfunc'])
 {
-	$staff = DBGet(DBQuery("SELECT s.STAFF_ID,CONCAT(s.FIRST_NAME,' ',s.LAST_NAME) AS FULL_NAME,(SELECT STAFF_ID FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS ACCOUNT_ID,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM staff s WHERE s.STAFF_ID='".UserStaffID()."'"));
+	$staff = DBGet(DBQuery("SELECT s.STAFF_ID,s.FIRST_NAME||' '||s.LAST_NAME AS FULL_NAME,(SELECT STAFF_ID FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS ACCOUNT_ID,(SELECT BALANCE FROM FOOD_SERVICE_STAFF_ACCOUNTS WHERE STAFF_ID=s.STAFF_ID) AS BALANCE FROM STAFF s WHERE s.STAFF_ID='".UserStaffID()."'"));
 	$staff = $staff[1];
 
 	//$PHP_tmp_SELF = PreparePHP_SELF();

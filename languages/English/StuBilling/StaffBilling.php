@@ -22,7 +22,7 @@ if($_REQUEST[modfunc]=='')
 
 if($_REQUEST[modfunc]=='list')
 {
-	$sql = "SELECT CONCAT(LAST_NAME,', ',FIRST_NAME) as FULL_NAME,TEACHER_ID AS STAFF_ID,SCHOOL,SCHOOL AS DISP_SCHOOL,'T' AS TYPE
+	$sql = "SELECT LAST_NAME||', '||FIRST_NAME as FULL_NAME,TEACHER_ID AS STAFF_ID,SCHOOL,SCHOOL AS DISP_SCHOOL,'T' AS TYPE
 			FROM TEACHERS WHERE SYEAR='$_REQUEST[year]' ";
 	if($_REQUEST[sch])
 		$sql .= "AND SCHOOL='$_REQUEST[sch]' ";
@@ -35,8 +35,8 @@ if($_REQUEST[modfunc]=='list')
 
 	$sql .= "UNION ";
 
-	$sql .= "SELECT CONCAT(LAST_NAME,', ',FIRST_NAME) as FULL_NAME,STAFF_ID AS STAFF_ID,SCHOOL,SCHOOL AS DISP_SCHOOL,'S' AS TYPE
-			FROM staff WHERE SYEAR='$_REQUEST[year]' ";
+	$sql .= "SELECT LAST_NAME||', '||FIRST_NAME as FULL_NAME,STAFF_ID AS STAFF_ID,SCHOOL,SCHOOL AS DISP_SCHOOL,'S' AS TYPE
+			FROM STAFF WHERE SYEAR='$_REQUEST[year]' ";
 	if($_REQUEST[sch])
 		$sql .= "AND SCHOOL='$_REQUEST[sch]' ";
 	if($_REQUEST[last])
@@ -77,7 +77,7 @@ if($_REQUEST[modfunc]=='detail')
 		define('SSMSTUDENT_ID','ssm.TEACHER_ID');
 	}
 	
-	$QI = DBQuery('SELECT CONCAT(FIRST_NAME,\' \',LAST_NAME) AS FULL_NAME FROM '.STU_SCHOOL_MEETS.' ssm WHERE '.SSMSTUDENT_ID."='".$_REQUEST[f_stuid]."'");
+	$QI = DBQuery('SELECT FIRST_NAME||\' \'||LAST_NAME AS FULL_NAME FROM '.STU_SCHOOL_MEETS.' ssm WHERE '.SSMSTUDENT_ID."='".$_REQUEST[f_stuid]."'");
 	$name = DBGet($QI,array('FULL_NAME'=>'GetCapWords'));
 	
 	DrawHeader($name[1][FULL_NAME],$header);

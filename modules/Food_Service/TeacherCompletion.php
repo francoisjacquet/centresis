@@ -35,8 +35,8 @@ foreach($periods_RET as $period)
 	$period_select .= "<OPTION value=$period[PERIOD_ID]".(($_REQUEST['period']==$period['PERIOD_ID'])?' SELECTED':'').">".$period['TITLE']."</OPTION>";
 $period_select .= "</SELECT>";
 
-$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) AS FULL_NAME,sp.TITLE,cp.PERIOD_ID,s.STAFF_ID
-		FROM staff s,COURSE_PERIODS cp,SCHOOL_PERIODS sp
+$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME AS FULL_NAME,sp.TITLE,cp.PERIOD_ID,s.STAFF_ID
+		FROM STAFF s,COURSE_PERIODS cp,SCHOOL_PERIODS sp
 		WHERE
 			sp.PERIOD_ID = cp.PERIOD_ID
 			AND cp.TEACHER_ID=s.STAFF_ID AND cp.MARKING_PERIOD_ID IN (".GetAllMP('QTR',UserMP()).")
@@ -104,7 +104,7 @@ if(!$_REQUEST['period'])
 }
 
 echo "<FORM action=Modules.php?modname=$_REQUEST[modname] method=POST>";
-DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date').' : '.$period_select.' : <INPUT type=submit value=Go>');
+DrawHeader(PrepareDate($date,'_date').' : '.$period_select.' : <INPUT type=submit value=Go>');
 echo '</FORM>';
 
 echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=add&menu_id=$_REQUEST[menu_id] method=POST>";

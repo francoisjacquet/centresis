@@ -25,7 +25,7 @@ if($_REQUEST['modfunc']=='remove' && AllowEdit())
 
 if(UserStudentID() && !$_REQUEST['modfunc'])
 {
-	$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM program_config WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility' AND TITLE IN ('START_DAY','END_DAY')"));
+	$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM PROGRAM_CONFIG WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility' AND TITLE IN ('START_DAY','END_DAY')"));
 	if(count($start_end_RET))
 	{
 		foreach($start_end_RET as $value)
@@ -63,17 +63,17 @@ if(UserStudentID() && !$_REQUEST['modfunc'])
 	if(!$_REQUEST['start_date'])
 	{
 		$start_time = $start;
-		$start_date = strtoupper(date('Y-m-d',$start_time));
-		$end_date = strtoupper(date('Y-m-d',$end));
+		$start_date = strtoupper(date('d-M-y',$start_time));
+		$end_date = strtoupper(date('d-M-y',$end));
 	}
 	else
 	{
 		$start_time = $_REQUEST['start_date'];
-		$start_date = strtoupper(date('Y-m-d',$start_time));
-		$end_date = strtoupper(date('Y-m-d',$start_time+60*60*24*6));
+		$start_date = strtoupper(date('d-M-y',$start_time));
+		$end_date = strtoupper(date('d-M-y',$start_time+60*60*24*6));
 	}
 
-	$begin_year = DBGet(DBQuery("SELECT min(UNIX_TIMESTAMP(SCHOOL_DATE)) as SCHOOL_DATE FROM attendance_calendar WHERE SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'"));
+	$begin_year = DBGet(DBQuery("SELECT min(date_part('epoch',SCHOOL_DATE)) as SCHOOL_DATE FROM ATTENDANCE_CALENDAR WHERE SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'"));
 	$begin_year = $begin_year[1]['SCHOOL_DATE'];
 	
 	$date_select = "<OPTION value=$start>".date('M d, Y',$start).' - '.date('M d, Y',$end).'</OPTION>';
@@ -107,7 +107,7 @@ if(UserStudentID() && !$_REQUEST['modfunc'])
 
 	echo '</TD><TD width=50% valign=top>';
 	
-	$RET = DBGet(DBQuery("SELECT e.ELIGIBILITY_CODE,c.TITLE as COURSE_TITLE FROM ELIGIBILITY e,COURSES c,COURSE_PERIODS cp WHERE e.STUDENT_ID='".UserStudentID()."' AND e.SYEAR='".UserSyear()."' AND e.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID AND cp.COURSE_ID=c.COURSE_ID AND e.SCHOOL_DATE BETWEEN '".date("Y-m-d",strtotime($start_date))."' AND '".date("Y-m-d",strtotime($end_date))."'"),array('ELIGIBILITY_CODE'=>'_makeLower'));
+	$RET = DBGet(DBQuery("SELECT e.ELIGIBILITY_CODE,c.TITLE as COURSE_TITLE FROM ELIGIBILITY e,COURSES c,COURSE_PERIODS cp WHERE e.STUDENT_ID='".UserStudentID()."' AND e.SYEAR='".UserSyear()."' AND e.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID AND cp.COURSE_ID=c.COURSE_ID AND e.SCHOOL_DATE BETWEEN '$start_date' AND '$end_date'"),array('ELIGIBILITY_CODE'=>'_makeLower'));
 	$columns = array('COURSE_TITLE'=>_('Course'),'ELIGIBILITY_CODE'=>_('Grade'));
 	ListOutput($RET,$columns,'Course','Courses');
 	

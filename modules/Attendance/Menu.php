@@ -8,11 +8,11 @@ $menu['Attendance']['admin'] = array(
 						'Attendance/Percent.php?list_by_day=true'=>_('Average Attendance by Day'),
 						'Attendance/DailySummary.php'=>_('Attendance Chart'),
 						'Attendance/StudentSummary.php'=>_('Absence Summary'),
-						// 2=>_('Utilities'),
-						// 'Attendance/FixDailyAttendance.php'=>_('Recalculate Daily Attendance'),
-						// 'Attendance/DuplicateAttendance.php'=>_('Delete Duplicate Attendance'),
+						2=>_('Utilities'),
+						'Attendance/FixDailyAttendance.php'=>_('Recalculate Daily Attendance'),
+						'Attendance/DuplicateAttendance.php'=>_('Delete Duplicate Attendance'),
 						3=>_('Setup'),
-						//'Attendance/AttendanceCodes.php'=>_('Attendance Codes'),
+						'Attendance/AttendanceCodes.php'=>_('Attendance Codes'),
 						4=>_('Teacher Programs'),
 						'Users/TeacherPrograms.php?include=Attendance/TakeAttendance.php'=>_('Take Attendance')
 					);

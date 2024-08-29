@@ -43,35 +43,31 @@ if(UserStudentID())
             }
             elseif($columns['COURSE_TITLE'])
             {
-				if($columns['WEIGHTED_GP']!="") {
-					$sql = 'INSERT INTO student_report_card_grades ';
-					$fields = 'SCHOOL_ID, STUDENT_ID, MARKING_PERIOD_ID, ';
-					$values = UserSchool().", $student_id, $mp_id, ";
-					if(!$columns['GP_SCALE']) $columns['GP_SCALE'] = SchoolInfo('REPORTING_GP_SCALE');
-					if(!$columns['CREDIT_ATTEMPTED']) $columns['CREDIT_ATTEMPTED'] = 1;
-					if(!$columns['CREDIT_EARNED']){
-						if($columns['UNWEIGHTED_GP'] > 0 || $columns['WEIGHTED_GP'] > 0) 
-							$columns['CREDIT_EARNED'] = 1;
-						else
-							$columns['CREDIT_EARNED'] = 0;
-					}
-					if(!$columns['CLASS_RANK']) $columns['CLASS_RANK']='Y'; 
-					
-					$go = false;
-					foreach($columns as $column=>$value)
-						if($value)
-						{
-							$fields .= $column.',';
-							$values .= '\''.str_replace("\'","''",$value).'\',';
-							$go = true;
-						}
-					$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
-	
-					if($go && $mp_id && $student_id) DBQuery($sql);
-				}
-				else {
-					BackPromptMsg(_('Field Required'),_('Enter Grade Points value'), $table);
-				}
+                $sql = 'INSERT INTO student_report_card_grades ';
+                $fields = 'SCHOOL_ID, STUDENT_ID, MARKING_PERIOD_ID, ';
+                $values = UserSchool().", $student_id, $mp_id, ";
+                if(!$columns['GP_SCALE']) $columns['GP_SCALE'] = SchoolInfo('REPORTING_GP_SCALE');
+                if(!$columns['CREDIT_ATTEMPTED']) $columns['CREDIT_ATTEMPTED'] = 1;
+                if(!$columns['CREDIT_EARNED']){
+                    if($columns['UNWEIGHTED_GP'] > 0 || $columns['WEIGHTED_GP'] > 0) 
+                        $columns['CREDIT_EARNED'] = 1;
+                    else
+                        $columns['CREDIT_EARNED'] = 0;
+                }
+                if(!$columns['CLASS_RANK']) $columns['CLASS_RANK']='Y'; 
+                
+                $go = false;
+                foreach($columns as $column=>$value)
+                    if($value)
+                    {
+                        $fields .= $column.',';
+                        $values .= '\''.str_replace("\'","''",$value).'\',';
+                        $go = true;
+                    }
+                $sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
+
+                if($go && $mp_id && $student_id)
+                    DBQuery($sql);
             }
         }
         unset($_REQUEST['modfunc']); 
@@ -96,12 +92,11 @@ if(UserStudentID())
         sms.cum_unweighted_factor*s.reporting_gp_scale as unweighted_cum,
        CASE WHEN sms.cr_credits > 0 THEN (sms.cr_weighted_factors/cr_credits)*s.reporting_gp_scale ELSE 0 END as cr_weighted,
        CASE WHEN sms.cr_credits > 0 THEN (sms.cr_unweighted_factors/cr_credits)*s.reporting_gp_scale ELSE 0 END as cr_unweighted
-       FROM MARKING_PERIODS mp, student_mp_stats sms, schools s
+       FROM marking_periods mp, student_mp_stats sms, schools s
        WHERE sms.marking_period_id = mp.marking_period_id and
              s.id = mp.school_id and sms.student_id = $student_id
-    AND mp.school_id = ".UserSchool()." GROUP BY mp_id, mp_name order by posted";
+    AND mp.school_id = ".UserSchool()." order by posted";
             
-		//echo $gquery;
         $GRET = DBGet(DBQuery($gquery));
         
         $last_posted = null;
@@ -243,7 +238,7 @@ if(UserStudentID())
                 $link['remove']['variables'] = array('id'=>'ID');
                 $link['add']['html']['remove'] = button('add');
                 $LO_ret = DBGet(DBQuery($sql),$functions);
-                ListOutput($LO_ret,$LO_columns,'.','.',$link,array(),array('count'=>false,'download'=>false,'search'=>false));
+                ListOutput($LO_ret,$LO_columns,'','',$link,array(),array('count'=>false,'download'=>false,'search'=>false));
             }
             echo '<CENTER>';
             if (!$LO_ret){
@@ -262,7 +257,7 @@ function makeTextInput($value,$name)
         $id = 'new';
 //    //bjj adding 'GP_SCALE'
     if($name=='COURSE_TITLE')
-        $extra = 'size=25 maxlength=25';
+        $extra = 'size=25 maxlength=100';
     elseif($name=='GRADE_PERCENT')
         $extra = 'size=6 maxlength=6';
     elseif($name=='GRADE_LETTER' || $name=='WEIGHTED_GP' || $name=='UNWEIGHTED_GP')

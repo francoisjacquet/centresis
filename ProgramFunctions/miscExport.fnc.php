@@ -16,7 +16,7 @@ function _makeCalendar($value,$column)
 {	global $THIS_RET,$_CENTRE,$calendars_RET;
 
 	if(!$calendars_RET)
-		$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM attendance_calendars WHERE SYEAR='".UserSyear()."'"),array(),array('CALENDAR_ID'));
+		$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM ATTENDANCE_CALENDARS WHERE SYEAR='".UserSyear()."'"),array(),array('CALENDAR_ID'));
 
 	return $calendars_RET[$value][1]['TITLE'];
 }

@@ -25,14 +25,17 @@ if($_REQUEST['modfunc']=='save')
 
 	if(count($RET))
 	{
-		$LO_columns = array('TITLE'=>_('Assignment'));
+        if($_REQUEST['description']=='Y')
+            $LO_columns = array('TITLE'=>_('Assignment / Description'));
+        else
+		    $LO_columns = array('TITLE'=>_('Assignment'));
 		if($_REQUEST['assigned_date']=='Y')
 			$LO_columns += array('ASSIGNED_DATE'=>_('Assigned Date'));
 		if($_REQUEST['due_date']=='Y')
 			$LO_columns += array('DUE_DATE'=>_('Due Date'));
 		$LO_columns += array('POINTS'=>_('Points'),'PERCENT_GRADE'=>_('Percent'),'LETTER_GRADE'=>_('Letter'),'COMMENT'=>_('Comment'));
 
-		$extra2['SELECT_ONLY'] = "ga.TITLE,ga.ASSIGNED_DATE,ga.DUE_DATE,gt.ASSIGNMENT_TYPE_ID,gg.POINTS,ga.POINTS AS TOTAL_POINTS,gt.FINAL_GRADE_PERCENT,gg.COMMENT,gg.POINTS AS PERCENT_GRADE,gg.POINTS AS LETTER_GRADE,CASE WHEN (ga.ASSIGNED_DATE IS NULL OR CURRENT_DATE>=ga.ASSIGNED_DATE) AND (ga.DUE_DATE IS NULL OR CURRENT_DATE>=ga.DUE_DATE OR CURRENT_DATE>(SELECT END_DATE FROM SCHOOL_MARKING_PERIODS WHERE MARKING_PERIOD_ID=ga.MARKING_PERIOD_ID)) THEN 'Y' ELSE NULL END AS DUE,gt.TITLE AS CATEGORY_TITLE";
+		$extra2['SELECT_ONLY'] = "ga.TITLE,ga.DESCRIPTION,ga.ASSIGNED_DATE,ga.DUE_DATE,gt.ASSIGNMENT_TYPE_ID,gg.POINTS,ga.POINTS AS TOTAL_POINTS,gt.FINAL_GRADE_PERCENT,gg.COMMENT,gg.POINTS AS PERCENT_GRADE,gg.POINTS AS LETTER_GRADE,CASE WHEN (ga.ASSIGNED_DATE IS NULL OR CURRENT_DATE>=ga.ASSIGNED_DATE) AND (ga.DUE_DATE IS NULL OR CURRENT_DATE>=ga.DUE_DATE OR CURRENT_DATE>(SELECT END_DATE FROM SCHOOL_MARKING_PERIODS WHERE MARKING_PERIOD_ID=ga.MARKING_PERIOD_ID)) THEN 'Y' ELSE NULL END AS DUE,gt.TITLE AS CATEGORY_TITLE";
 		$extra2['FROM'] = " JOIN GRADEBOOK_ASSIGNMENTS ga ON ((ga.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID OR ga.COURSE_ID=cp.COURSE_ID AND ga.STAFF_ID=cp.TEACHER_ID) AND ga.MARKING_PERIOD_ID='".UserMP()."') LEFT OUTER JOIN GRADEBOOK_GRADES gg ON (gg.STUDENT_ID=s.STUDENT_ID AND gg.ASSIGNMENT_ID=ga.ASSIGNMENT_ID AND gg.COURSE_PERIOD_ID=cp.COURSE_PERIOD_ID),GRADEBOOK_ASSIGNMENT_TYPES gt";
 		$extra2['WHERE'] = " AND gt.ASSIGNMENT_TYPE_ID=ga.ASSIGNMENT_TYPE_ID AND gt.COURSE_ID=cp.COURSE_ID AND (gg.POINTS IS NOT NULL OR (ga.ASSIGNED_DATE IS NULL OR CURRENT_DATE>=ga.ASSIGNED_DATE) AND (ga.DUE_DATE IS NULL OR CURRENT_DATE>=ga.DUE_DATE) OR CURRENT_DATE>(SELECT END_DATE FROM SCHOOL_MARKING_PERIODS WHERE MARKING_PERIOD_ID=ga.MARKING_PERIOD_ID))";
 		$extra2['WHERE'] .=" AND (gg.POINTS IS NOT NULL OR ga.DUE_DATE IS NULL OR ((ga.DUE_DATE>=ss.START_DATE AND (ss.END_DATE IS NULL OR ga.DUE_DATE<=ss.END_DATE)) AND (ga.DUE_DATE>=ssm.START_DATE AND (ssm.END_DATE IS NULL OR ga.DUE_DATE<=ssm.END_DATE))))";
@@ -53,8 +56,7 @@ if($_REQUEST['modfunc']=='save')
 			$singular = 'Assignment';
 			$plural = 'Assignments';
 		}
-		$extra2['functions'] = array('ASSIGNED_DATE'=>'_removeSpaces','DUE_DATE'=>'_removeSpaces','TITLE'=>'_removeSpaces','POINTS'=>'_makeExtra','PERCENT_GRADE'=>'_makeExtra','LETTER_GRADE'=>'_makeExtra');
-
+		$extra2['functions'] = array('ASSIGNED_DATE'=>'_removeSpaces','DUE_DATE'=>'_removeSpaces','TITLE'=>'_makeTitle','POINTS'=>'_makeExtra','PERCENT_GRADE'=>'_makeExtra','LETTER_GRADE'=>'_makeExtra');
 		$handle = PDFStart();
 		foreach($RET as $student)
 		{
@@ -132,10 +134,11 @@ if(!$_REQUEST['modfunc'])
 
 		$extra['extra_header_left'] .= '<TR><TD align=right width=120> Due Date</TD><TD><INPUT type=checkbox value=Y name=due_date checked></TD>';
 		$extra['extra_header_left'] .= '<TD align=right> '._('Exclude Ungraded Assignments Not Due').'</TD><TD><INPUT type=checkbox value=Y name=exclude_notdue></TD></TR>';
-		Widgets('mailing_labels');
-		$extra['extra_header_left'] .= substr($extra['search'],0,-5);
-		$extra['search'] = '';
+        $extra['extra_header_left'] .= '<TR><TD align=right width=120> Description</TD><TD><INPUT type=checkbox value=Y name=description></TD>';
 		$extra['extra_header_left'] .= '<TD align=right> '._('Group by Assignment Category').'</TD><TD><INPUT type=checkbox value=Y name=by_category></TD></TR>';
+        Widgets('mailing_labels');
+        $extra['extra_header_left'] .= substr($extra['search'],0,-5).'<TD>&nbsp;</TD><TR>';
+        $extra['search'] = '';
 		$extra['extra_header_left'] .= '</TABLE>';
 		//$extra['old'] = true; // proceed to 'list' if UserStudentID()
 	}
@@ -206,6 +209,15 @@ function _makeExtra($value,$column)
 		else
 			return 'e/c';
 	}
+}
+
+function _makeTitle($value,$column) {
+    global $THIS_RET;
+    
+    $ret = _removeSpaces($value,$column);
+    if($_REQUEST['description']=='Y')
+        $ret .= '<br />'.$THIS_RET['DESCRIPTION'];
+    return $ret;
 }
 
 function _removeSpaces($value,$column)

@@ -63,7 +63,7 @@ if($_REQUEST['type_id'])
 	if(!$types_RET[$_REQUEST['type_id']])
 		unset($_REQUEST['type_id']);
 
-$assignments_RET = DBGet(DBQuery("SELECT ASSIGNMENT_ID,ASSIGNMENT_TYPE_ID,TITLE,POINTS,ASSIGNED_DATE,DUE_DATE,UNIX_TIMESTAMP(DUE_DATE) AS DUE_EPOCH,CASE WHEN (ASSIGNED_DATE IS NULL OR CURRENT_DATE>=ASSIGNED_DATE) AND (DUE_DATE IS NULL OR CURRENT_DATE>=DUE_DATE) OR CURRENT_DATE>(SELECT END_DATE FROM SCHOOL_MARKING_PERIODS WHERE MARKING_PERIOD_ID=gradebook_assignments.MARKING_PERIOD_ID) THEN 'Y' ELSE NULL END AS DUE FROM GRADEBOOK_ASSIGNMENTS WHERE STAFF_ID='".User('STAFF_ID')."' AND ((COURSE_ID=(SELECT COURSE_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".UserCoursePeriod()."') AND STAFF_ID='".User('STAFF_ID')."') OR COURSE_PERIOD_ID='".UserCoursePeriod()."') AND MARKING_PERIOD_ID='".UserMP()."'".($_REQUEST['type_id']?" AND ASSIGNMENT_TYPE_ID='$_REQUEST[type_id]'":'')." ORDER BY ".Preferences('ASSIGNMENT_SORTING','Gradebook')." DESC,ASSIGNMENT_ID DESC,TITLE"),array(),array('ASSIGNMENT_ID'));
+$assignments_RET = DBGet(DBQuery("SELECT ASSIGNMENT_ID,ASSIGNMENT_TYPE_ID,TITLE,POINTS,ASSIGNED_DATE,DUE_DATE,extract(EPOCH FROM DUE_DATE) AS DUE_EPOCH,CASE WHEN (ASSIGNED_DATE IS NULL OR CURRENT_DATE>=ASSIGNED_DATE) AND (DUE_DATE IS NULL OR CURRENT_DATE>=DUE_DATE) OR CURRENT_DATE>(SELECT END_DATE FROM SCHOOL_MARKING_PERIODS WHERE MARKING_PERIOD_ID=gradebook_assignments.MARKING_PERIOD_ID) THEN 'Y' ELSE NULL END AS DUE FROM GRADEBOOK_ASSIGNMENTS WHERE STAFF_ID='".User('STAFF_ID')."' AND ((COURSE_ID=(SELECT COURSE_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".UserCoursePeriod()."') AND STAFF_ID='".User('STAFF_ID')."') OR COURSE_PERIOD_ID='".UserCoursePeriod()."') AND MARKING_PERIOD_ID='".UserMP()."'".($_REQUEST['type_id']?" AND ASSIGNMENT_TYPE_ID='$_REQUEST[type_id]'":'')." ORDER BY ".Preferences('ASSIGNMENT_SORTING','Gradebook')." DESC,ASSIGNMENT_ID DESC,TITLE"),array(),array('ASSIGNMENT_ID'));
 //echo '<pre>'; var_dump($assignments_RET); echo '</pre>';
 // when changing course periods the assignment_id will be wrong except for '' (totals) and 'all'
 if($_REQUEST['assignment_id'] && $_REQUEST['assignment_id']!='all')
@@ -180,7 +180,7 @@ else
 		$count_students = GetStuList($count_extra);
 		$count_students = count($count_students);
 
-		$extra['SELECT'] = ",UNIX_TIMESTAMP(".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,UNIX_TIMESTAMP(".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH";
+		$extra['SELECT'] = ",extract(EPOCH FROM ".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,extract(EPOCH FROM ".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH";
 		$extra['functions'] = array();
 		if(count($assignments_RET))
 		{
@@ -198,7 +198,7 @@ else
 	elseif($_REQUEST['assignment_id'])
 	{
 		$extra['SELECT'] .= ",'$_REQUEST[assignment_id]' AS POINTS,'$_REQUEST[assignment_id]' AS PERCENT_GRADE,'$_REQUEST[assignment_id]' AS LETTER_GRADE,'$_REQUEST[assignment_id]' AS COMMENT";
-		$extra['SELECT'] .= ",UNIX_TIMESTAMP(".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,UNIX_TIMESTAMP(".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH";
+		$extra['SELECT'] .= ",extract(EPOCH FROM ".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,extract(EPOCH FROM ".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH";
 		$extra['functions'] = array('POINTS'=>'_makeExtraAssnCols','PERCENT_GRADE'=>'_makeExtraAssnCols','LETTER_GRADE'=>'_makeExtraAssnCols','COMMENT'=>'_makeExtraAssnCols');
 		$LO_columns += array('POINTS'=>_('Points'),'PERCENT_GRADE'=>_('Percent'),'LETTER_GRADE'=>_('Letter'),'COMMENT'=>_('Comment'));
 		$current_RET = DBGet(DBQuery("SELECT STUDENT_ID,POINTS,COMMENT,ASSIGNMENT_ID FROM GRADEBOOK_GRADES WHERE ASSIGNMENT_ID='$_REQUEST[assignment_id]' AND COURSE_PERIOD_ID='".UserCoursePeriod()."'"),array(),array('STUDENT_ID','ASSIGNMENT_ID'));
@@ -217,7 +217,7 @@ else
 			$points_RET = GetStuList($extra);
 			//echo '<pre>'; var_dump($points_RET); echo '</pre>';
 			unset($extra);
-			$extra['SELECT'] = ",UNIX_TIMESTAMP(".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,UNIX_TIMESTAMP(".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH,'' AS POINTS,'' AS PERCENT_GRADE,'' AS LETTER_GRADE";
+			$extra['SELECT'] = ",extract(EPOCH FROM ".db_greatest('ssm.START_DATE','ss.START_DATE').") AS START_EPOCH,extract(EPOCH FROM ".db_least('ssm.END_DATE','ss.END_DATE').") AS END_EPOCH,'' AS POINTS,'' AS PERCENT_GRADE,'' AS LETTER_GRADE";
 			$extra['functions'] = array('POINTS'=>'_makeExtraAssnCols','PERCENT_GRADE'=>'_makeExtraAssnCols','LETTER_GRADE'=>'_makeExtraAssnCols');
 			$LO_columns += array('POINTS'=>_('Points'),'PERCENT_GRADE'=>_('Percent'),'LETTER_GRADE'=>_('Letter'));
 		}

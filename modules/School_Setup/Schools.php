@@ -32,12 +32,11 @@ if($_REQUEST['modfunc']=='update' && ($_REQUEST['button']==_('Save') || $_REQUES
 
 			if($fields && $values)
 			{
-				$next_id = DBGet(DBQuery("SELECT ID+1 AS NEWID FROM SCHOOLS ORDER BY ID DESC LIMIT 1"));
-				//$id = DBGet(DBQuery("SELECT ".db_nextval('SCHOOLS')." AS ID".FROM_DUAL));
-				$id = $next_id[1]['NEWID'];
-				$sql = "INSERT INTO SCHOOLS (ID,SYEAR$fields) values('".$id."','".UserSyear()."'$values)";
+				$id = DBGet(DBQuery("SELECT ".db_seq_nextval('SCHOOLS_SEQ')." AS ID".FROM_DUAL));
+				$id = $id[1]['ID'];
+				$sql = "INSERT INTO SCHOOLS (ID,SYEAR$fields) values('$id','".UserSyear()."'$values)";
 				DBQuery($sql);
-				DBQuery("UPDATE staff SET SCHOOLS=CONCAT(SUBSTRING(SCHOOLS, 1, CHAR_LENGTH(SCHOOLS) - 1),',$id,') WHERE STAFF_ID='".User('STAFF_ID')."' AND SCHOOLS IS NOT NULL");
+				DBQuery("UPDATE STAFF SET SCHOOLS=rtrim(SCHOOLS,',')||',$id,' WHERE STAFF_ID='".User('STAFF_ID')."' AND SCHOOLS IS NOT NULL");
 				$_SESSION['UserSchool'] = $id;
 				echo '<script language=JavaScript>parent.side.location="'.$_SESSION['Side_PHP_SELF'].'?modcat="+parent.side.document.forms[0].modcat.value;</script>';
 				unset($_REQUEST['new_school']);
@@ -57,11 +56,11 @@ if($_REQUEST['modfunc']=='update' && $_REQUEST['button']==_('Delete') && User('P
 	{
 		DBQuery("DELETE FROM SCHOOLS WHERE ID='".UserSchool()."'");
 		DBQuery("DELETE FROM SCHOOL_GRADELEVELS WHERE SCHOOL_ID='".UserSchool()."'");
-		DBQuery("DELETE FROM attendance_calendar WHERE SCHOOL_ID='".UserSchool()."'");
+		DBQuery("DELETE FROM ATTENDANCE_CALENDAR WHERE SCHOOL_ID='".UserSchool()."'");
 		DBQuery("DELETE FROM SCHOOL_PERIODS WHERE SCHOOL_ID='".UserSchool()."'");
 		DBQuery("DELETE FROM SCHOOL_MARKING_PERIODS WHERE SCHOOL_ID='".UserSchool()."'");
-		DBQuery("UPDATE staff SET CURRENT_SCHOOL_ID=NULL WHERE CURRENT_SCHOOL_ID='".UserSchool()."'");
-		DBQuery("UPDATE staff SET SCHOOLS=replace(SCHOOLS,',".UserSchool().",',',')");
+		DBQuery("UPDATE STAFF SET CURRENT_SCHOOL_ID=NULL WHERE CURRENT_SCHOOL_ID='".UserSchool()."'");
+		DBQuery("UPDATE STAFF SET SCHOOLS=replace(SCHOOLS,',".UserSchool().",',',')");
 
 		unset($_SESSION['UserSchool']);
 		echo '<script language=JavaScript>parent.side.location="'.$_SESSION['Side_PHP_SELF'].'?modcat="+parent.side.document.forms[0].modcat.value;</script>';

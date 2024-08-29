@@ -73,7 +73,7 @@ if($_REQUEST['modfunc']=='save')
 	{
 	$st_list = '\''.implode('\',\'',$_REQUEST['student']).'\'';
 	$extra['SELECT'] = ",lower($email_column) AS EMAIL";
-	$extra['SELECT'] .= ",(SELECT STAFF_ID FROM staff WHERE lower(EMAIL)=lower($email_column) AND PROFILE='parent' AND SYEAR=ssm.SYEAR) AS STAFF_ID";
+	$extra['SELECT'] .= ",(SELECT STAFF_ID FROM STAFF WHERE lower(EMAIL)=lower($email_column) AND PROFILE='parent' AND SYEAR=ssm.SYEAR) AS STAFF_ID";
 	$extra['WHERE'] = " AND s.STUDENT_ID IN ($st_list)";
 	$extra['group'] = array('EMAIL');
 	$extra['addr'] = true;
@@ -92,21 +92,19 @@ if($_REQUEST['modfunc']=='save')
 			{
 				$tmp_username = $username = trim(strpos($students[1]['EMAIL'],'@')!==false?substr($students[1]['EMAIL'],0,strpos($students[1]['EMAIL'],'@')):$students[1]['EMAIL']);
 				$i = 1;
-				while(DBGet(DBQuery("SELECT STAFF_ID FROM staff WHERE upper(USERNAME)=upper('$username') AND SYEAR='".UserSyear()."'")))
+				while(DBGet(DBQuery("SELECT STAFF_ID FROM STAFF WHERE upper(USERNAME)=upper('$username') AND SYEAR='".UserSyear()."'")))
 					$username = $tmp_username.$i++;
 				$user = DBGet(DBQuery("SELECT FIRST_NAME,MIDDLE_NAME,LAST_NAME FROM PEOPLE WHERE PERSON_ID='".$_REQUEST['contact'][$student_id]."'"));
-				
 				$user = $user[1];
-				//$password = md5($passwords[rand(0,count($passwords)-1)]);
-				$password = EncryptPWD($passwords[rand(0,count($passwords)-1)]);
+				$password = $passwords[rand(0,count($passwords)-1)];
 				if(!$test_email)
 				{
 					// get staff id
-					$id = DBGet(DBQuery('SELECT '.db_nextval('STAFF').' AS SEQ_ID '.FROM_DUAL));
+					$id = DBGet(DBQuery('SELECT '.db_seq_nextval('STAFF_SEQ').' AS SEQ_ID '.FROM_DUAL));
 					$id = $id[1]['SEQ_ID'];
-					$sql = "INSERT INTO staff (STAFF_ID,SYEAR,PROFILE,PROFILE_ID,FIRST_NAME,MIDDLE_NAME,LAST_NAME,USERNAME,PASSWORD,EMAIL) values ('$id','".UserSyear()."','parent','$profile_id','$user[FIRST_NAME]','$user[MIDDLE_NAME]','$user[LAST_NAME]','$username','$password','".$students[1]['EMAIL']."')";
+					$sql = "INSERT INTO STAFF (STAFF_ID,SYEAR,PROFILE,PROFILE_ID,FIRST_NAME,MIDDLE_NAME,LAST_NAME,USERNAME,PASSWORD,EMAIL) values ('$id','".UserSyear()."','parent','$profile_id','$user[FIRST_NAME]','$user[MIDDLE_NAME]','$user[LAST_NAME]','$username','$password','".$students[1]['EMAIL']."')";
 					DBQuery($sql);
-					$staff = DBGet(DBquery("SELECT CONCAT(FIRST_NAME,' ',LAST_NAME) AS NAME,USERNAME,PASSWORD FROM staff WHERE STAFF_ID=$id"));
+					$staff = DBGet(DBquery("SELECT FIRST_NAME||' '||LAST_NAME AS NAME,USERNAME,PASSWORD FROM STAFF WHERE STAFF_ID=$id"));
 				}
 				else
 				{
@@ -119,7 +117,7 @@ if($_REQUEST['modfunc']=='save')
 		else
 		{
 			$id = $students[1]['STAFF_ID'];
-			$staff = DBGet(DBquery("SELECT CONCAT(FIRST_NAME,' ',LAST_NAME) AS NAME,USERNAME,PASSWORD FROM staff WHERE STAFF_ID=$id"));
+			$staff = DBGet(DBquery("SELECT FIRST_NAME||' '||LAST_NAME AS NAME,USERNAME,PASSWORD FROM STAFF WHERE STAFF_ID=$id"));
 			$account = 'old';
 		}
 		if($id)
@@ -170,7 +168,7 @@ if(!$_REQUEST['modfunc'])
 	}
 
 	$extra['SELECT'] = ",s.STUDENT_ID AS CHECKBOX,lower($email_column) AS EMAIL,s.STUDENT_ID AS CONTACT";
-	$extra['SELECT'] .= ",(SELECT STAFF_ID FROM staff WHERE lower(EMAIL)=lower($email_column) AND PROFILE='parent' AND SYEAR=ssm.SYEAR) AS STAFF_ID";
+	$extra['SELECT'] .= ",(SELECT STAFF_ID FROM STAFF WHERE lower(EMAIL)=lower($email_column) AND PROFILE='parent' AND SYEAR=ssm.SYEAR) AS STAFF_ID";
 	//$extra['WHERE'] = " AND $email_column IS NOT NULL";
 	$extra['WHERE'] .= " AND NOT EXISTS (SELECT '' FROM STUDENTS_JOIN_USERS sju,STAFF st WHERE sju.STUDENT_ID=s.STUDENT_ID AND st.STAFF_ID=sju.STAFF_ID AND SYEAR='".UserSyear()."')";
 
@@ -214,9 +212,9 @@ function _makeContactSelect($value,$column)
 {	global $THIS_RET;
 
 	if(!$THIS_RET['STAFF_ID'])
-		$RET = DBGet(DBQuery("SELECT sjp.PERSON_ID,sjp.STUDENT_RELATION,CONCAT(p.FIRST_NAME,' ',p.LAST_NAME) AS CONTACT FROM STUDENTS_JOIN_PEOPLE sjp,PEOPLE p WHERE p.PERSON_ID=sjp.PERSON_ID AND sjp.STUDENT_ID='$value' AND sjp.ADDRESS_ID='$THIS_RET[ADDRESS_ID]' ORDER BY sjp.STUDENT_RELATION"));
+		$RET = DBGet(DBQuery("SELECT sjp.PERSON_ID,sjp.STUDENT_RELATION,p.FIRST_NAME||' '||p.LAST_NAME AS CONTACT FROM STUDENTS_JOIN_PEOPLE sjp,PEOPLE p WHERE p.PERSON_ID=sjp.PERSON_ID AND sjp.STUDENT_ID='$value' AND sjp.ADDRESS_ID='$THIS_RET[ADDRESS_ID]' ORDER BY sjp.STUDENT_RELATION"));
 	else
-		$RET = DBGet(DBQuery("SELECT '' AS PERSON_ID,STAFF_ID AS STUDENT_RELATION,CONCAT(FIRST_NAME,' ',LAST_NAME) AS CONTACT FROM staff WHERE STAFF_ID='$THIS_RET[STAFF_ID]'"));
+		$RET = DBGet(DBQuery("SELECT '' AS PERSON_ID,STAFF_ID AS STUDENT_RELATION,FIRST_NAME||' '||LAST_NAME AS CONTACT FROM STAFF WHERE STAFF_ID='$THIS_RET[STAFF_ID]'"));
 
 	if(count($RET))
 	{

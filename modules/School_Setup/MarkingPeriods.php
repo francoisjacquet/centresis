@@ -74,25 +74,20 @@ if($_REQUEST['tables'] && $_POST['tables'] && AllowEdit())
 					if(!VerifyDate($value) && $value!='')
 			 			BackPrompt(_('Some dates are not valid.'));
 				}
-				if($column=='START_DATE' || $column=='END_DATE' || $column=='POST_START_DATE' || $column=='POST_END_DATE'):
-					$sql .= $column."='".str_replace("\'","''",date("Y-m-d", strtotime($value)))."',";
-				else :
-					$sql .= $column."='".str_replace("\'","''",$value)."',";
-				endif;
+				$sql .= $column."='".str_replace("\'","''",$value)."',";
 			}
 			$sql = substr($sql,0,-1) . " WHERE MARKING_PERIOD_ID='$id'";
 			$go = true;
 		}
 		else
 		{
-			//$id_RET = DBGet(DBQuery('SELECT '.db_nextval('SCHOOL_MARKING_PERIODS').' AS ID'.FROM_DUAL));
-			$id_RET = db_nextval('SCHOOL_MARKING_PERIODS');
-			
-			$sql = "INSERT INTO SCHOOL_MARKING_PERIODS ";
+			$id_RET = DBGet(DBQuery('SELECT '.db_seq_nextval('MARKING_PERIOD_SEQ').' AS ID'.FROM_DUAL));
 
-			$fields = "MP,SYEAR,SCHOOL_ID,";
-			$values = "'$_REQUEST[mp_term]','".UserSyear()."','".UserSchool()."',";
-			$_REQUEST['marking_period_id'] = $id_RET;
+			$sql = "INSERT INTO SCHOOL_MARKING_PERIODS ";
+			$fields = "MARKING_PERIOD_ID,MP,SYEAR,SCHOOL_ID,";
+			$values = "'".$id_RET[1]['ID']."','$_REQUEST[mp_term]','".UserSyear()."','".UserSchool()."',";
+
+			$_REQUEST['marking_period_id'] = $id_RET[1]['ID'];
 
 			switch($_REQUEST['mp_term'])
 			{
@@ -122,36 +117,27 @@ if($_REQUEST['tables'] && $_POST['tables'] && AllowEdit())
 				}
 				if($value)
 				{
-					if($column=='START_DATE' || $column=='END_DATE' || $column=='POST_START_DATE' || $column=='POST_END_DATE'):
-						$fields .= $column.',';
-						$values .= "'".str_replace("\'","''",date("Y-m-d", strtotime($value)))."',";
-					else :
 					$fields .= $column.',';
 					$values .= "'".str_replace("\'","''",$value)."',";
-					endif;
 					$go = true;
 				}
 			}
 			$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
-
 		}
-
-
-		// BUG Fixed. Get Value
 
 		// CHECK TO MAKE SURE ONLY ONE MP & ONE GRADING PERIOD IS OPEN AT ANY GIVEN TIME
 		$dates_RET = DBGet(DBQuery("SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='$_REQUEST[mp_term]' AND (true=false"
-			.($columns['START_DATE']?" OR '".date("Y-m-d", strtotime($columns['START_DATE']))."' BETWEEN START_DATE AND END_DATE":'')
-			.($columns['END_DATE']?" OR '".date("Y-m-d", strtotime($columns['END_DATE']))."' BETWEEN START_DATE AND END_DATE":'')
-			.($columns['START_DATE'] && $columns['END_DATE']?" OR START_DATE BETWEEN '".date("Y-m-d", strtotime($columns['START_DATE']))."' AND '".date("Y-m-d", strtotime($columns['END_DATE']))."'
-			OR END_DATE BETWEEN '".date("Y-m-d", strtotime($columns['START_DATE']))."' AND '".date("Y-m-d", strtotime($columns['END_DATE']))."'":'')
+			.(($columns['START_DATE'])?" OR '".$columns['START_DATE']."' BETWEEN START_DATE AND END_DATE":'')
+			.(($columns['END_DATE'])?" OR '".$columns['END_DATE']."' BETWEEN START_DATE AND END_DATE":'')
+			.(($columns['START_DATE'] && $columns['END_DATE'])?" OR START_DATE BETWEEN '".$columns['START_DATE']."' AND '".$columns['END_DATE']."'
+			OR END_DATE BETWEEN '".$columns['START_DATE']."' AND '".$columns['END_DATE']."'":'')
 			.") AND SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'".(($id!='new')?" AND SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."' AND MARKING_PERIOD_ID!='$id'":'')
 		));
 		$posting_RET = DBGet(DBQuery("SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='$_REQUEST[mp_term]' AND (true=false"
-			.($columns['POST_START_DATE']?" OR '".date("Y-m-d", strtotime($columns['POST_START_DATE']))."' BETWEEN POST_START_DATE AND POST_END_DATE":'')
-			.($columns['POST_END_DATE']?" OR '".date("Y-m-d", strtotime($columns['POST_END_DATE']))."' BETWEEN POST_START_DATE AND POST_END_DATE":'')
-			.($columns['POST_START_DATE'] && $columns['POST_END_DATE']?" OR POST_START_DATE BETWEEN '".date("Y-m-d", strtotime($columns['POST_START_DATE']))."' AND '".date("Y-m-d", strtotime($columns['POST_END_DATE']))."'
-			OR POST_END_DATE BETWEEN '".date("Y-m-d", strtotime($columns['POST_START_DATE']))."' AND '".date("Y-m-d", strtotime($columns['POST_END_DATE']))."'":'')
+			.(($columns['POST_START_DATE'])?" OR '".$columns['POST_START_DATE']."' BETWEEN POST_START_DATE AND POST_END_DATE":'')
+			.(($columns['POST_END_DATE'])?" OR '".$columns['POST_END_DATE']."' BETWEEN POST_START_DATE AND POST_END_DATE":'')
+			.(($columns['POST_START_DATE'] && $columns['POST_END_DATE'])?" OR POST_START_DATE BETWEEN '".$columns['POST_START_DATE']."' AND '".$columns['POST_END_DATE']."'
+			OR POST_END_DATE BETWEEN '".$columns['POST_START_DATE']."' AND '".$columns['POST_END_DATE']."'":'')
 			.") AND SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'".(($id!='new')?" AND MARKING_PERIOD_ID!='$id'":'')
 		));
 
@@ -161,11 +147,8 @@ if($_REQUEST['tables'] && $_POST['tables'] && AllowEdit())
 			BackPrompt(sprintf(_('The grade posting dates you specified for this marking period overlap with those of "%s".'),GetMP($posting_RET[1]['MARKING_PERIOD_ID']))." "._("Only one grade posting period can be open at any time."));
 
 
-		if($go) {
-			//echo $sql; exit(); // nick
+		if($go)
 			DBQuery($sql);
-		}
-
 	}
 	unset($_REQUEST['tables']);
 	unset($_SESSION['_REQUEST_vars']['tables']);
@@ -179,8 +162,8 @@ if($_REQUEST['modfunc']=='delete')
 		case 'FY':
 			$name = 'year';
 			$parent_term = ''; $parent_id = '';
-			//$extra[] = "DELETE FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS_BACKUP WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS_BACKUPZ WHERE PARENT_ID='$_REQUEST[marking_period_id]') AS THIRDTBL)) AS SECONDTBL)";
-			//$extra[] = "DELETE FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS_BACKUP WHERE PARENT_ID='$_REQUEST[marking_period_id]') AS SECONDTBL)";
+			$extra[] = "DELETE FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID='$_REQUEST[marking_period_id]'))";
+			$extra[] = "DELETE FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID IN (SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID='$_REQUEST[marking_period_id]')";
 			$extra[] = "DELETE FROM SCHOOL_MARKING_PERIODS WHERE PARENT_ID='$_REQUEST[marking_period_id]'";
 		break;
 

@@ -12,9 +12,9 @@ if($_REQUEST['modfunc']=='update'){
             if ($_REQUEST['day_values'][$id][$colname] && 
                 $_REQUEST['month_values'][$id][$colname] &&
                 $_REQUEST['year_values'][$id][$colname])
-                $_REQUEST['values'][$id][$colname] = $_REQUEST['year_values'][$id][$colname].'-'.
+                $_REQUEST['values'][$id][$colname] = $_REQUEST['day_values'][$id][$colname].'-'.
                                                     $_REQUEST['month_values'][$id][$colname].'-'.
-                                                    $_REQUEST['day_values'][$id][$colname];
+                                                    $_REQUEST['year_values'][$id][$colname];
         }
     }
     
@@ -25,11 +25,7 @@ if($_REQUEST['modfunc']=='update'){
             $sql = "UPDATE history_marking_periods SET ";
 
             foreach($columns as $column=>$value)
-				if($column=="POST_END_DATE"):
-					$sql .= $column."='".str_replace("\'","''",date("Y-m-d", strtotime($value)))."',";
-				else:
-					$sql .= $column."='".str_replace("\'","''",$value)."',";
-				endif;			
+                $sql .= $column."='".str_replace("\'","''",$value)."',";
 
             if($_REQUEST['tab_id']!='new')
                 $sql = substr($sql,0,-1) . " WHERE MARKING_PERIOD_ID='$id'";
@@ -50,11 +46,7 @@ if($_REQUEST['modfunc']=='update'){
                 if($value)
                 {
                     $fields .= $column.',';
-					if($column=="POST_END_DATE"):
-						$values .= '\''.str_replace("\'","''",date("Y-m-d", strtotime($value))).'\',';
-					else:
-						$values .= '\''.str_replace("\'","''",$value).'\',';
-					endif;
+                    $values .= '\''.str_replace("\'","''",$value).'\',';
                     $go = true;
                 }
             $sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';

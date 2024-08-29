@@ -5,7 +5,7 @@ include 'Menu.php';
 
 if(UserStaffID())
 {
-	$profile = DBGet(DBQuery("SELECT PROFILE_ID,PROFILE FROM staff WHERE STAFF_ID='".UserStaffID()."'"));
+	$profile = DBGet(DBQuery("SELECT PROFILE_ID,PROFILE FROM STAFF WHERE STAFF_ID='".UserStaffID()."'"));
 	if($profile[1]['PROFILE_ID'] || $profile[1]['PROFILE']=='none')
 	{
 		unset($_SESSION['staff_id']);
@@ -17,7 +17,7 @@ StaffWidgets('permissions_N');
 Search('staff_id',$extra);
 
 $user_id = UserStaffID();
-$profile = DBGet(DBQuery("SELECT PROFILE FROM staff WHERE STAFF_ID='$user_id'"));
+$profile = DBGet(DBQuery("SELECT PROFILE FROM STAFF WHERE STAFF_ID='$user_id'"));
 $xprofile = $profile[1]['PROFILE'];
 $exceptions_RET = DBGet(DBQuery("SELECT MODNAME,CAN_USE,CAN_EDIT FROM STAFF_EXCEPTIONS WHERE USER_ID='$user_id'"),array(),array('MODNAME'));
 if($_REQUEST['modfunc']=='update' && AllowEdit())
@@ -29,7 +29,7 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 		$file = 'Students/Student.php&category_id='.$category['ID'];
 		$tmp_menu['Students'][$xprofile][$file] = ' &nbsp; &nbsp; &rsaquo; '.$category['TITLE'];
 	}
-	$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM staff_FIELD_CATEGORIES"));
+	$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM STAFF_FIELD_CATEGORIES"));
 	foreach($categories_RET as $category)
 	{
 		$file = 'Users/User.php&category_id='.$category['ID'];
@@ -77,7 +77,7 @@ if($_REQUEST['modfunc']=='update' && AllowEdit())
 
 if(UserStaffID() && !$_REQUEST['modfunc'])
 {
-$staff_RET = DBGet(DBQuery("SELECT FIRST_NAME,LAST_NAME,PROFILE,PROFILE_ID FROM staff WHERE STAFF_ID='".UserStaffID()."'"));
+$staff_RET = DBGet(DBQuery("SELECT FIRST_NAME,LAST_NAME,PROFILE,PROFILE_ID FROM STAFF WHERE STAFF_ID='".UserStaffID()."'"));
 
 if(!$staff_RET[1]['PROFILE_ID'])
 {
@@ -129,7 +129,7 @@ if(!$staff_RET[1]['PROFILE_ID'])
 					}
 					elseif($modcat=='Users' && $file=='Users/User.php')
 					{
-						$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM staff_FIELD_CATEGORIES ORDER BY SORT_ORDER,TITLE"));
+						$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM STAFF_FIELD_CATEGORIES ORDER BY SORT_ORDER,TITLE"));
 						foreach($categories_RET as $category)
 						{
 							$file = 'Users/User.php&category_id='.$category['ID'];
@@ -163,7 +163,7 @@ if(!$staff_RET[1]['PROFILE_ID'])
 }
 else
 {
-	$profile_title = DBGet(DBQuery("SELECT TITLE FROM user_profiles WHERE ID='".$staff_RET[1]['PROFILE_ID']."'"));
+	$profile_title = DBGet(DBQuery("SELECT TITLE FROM USER_PROFILES WHERE ID='".$staff_RET[1]['PROFILE_ID']."'"));
 	echo '<BR>';
 	PopTable('header',_('Error'),'width=50%');
 	echo '<TABLE><TR><TD><IMG SRC=assets/warning_button.gif width=30></TD><TD>'.sprintf(_('%s %s is assigned to the profile %s.'),$staff_RET[1]['FIRST_NAME'],$staff_RET[1]['LAST_NAME'],$profile_title[1]['TITLE']).'<BR><BR> '.sprintf(_('To assign permissions to this user, either change the permissions for this profile using the %s setup or change this user to a user with custom permissions by using %s.'), ProgramLink('Users/Profiles.php',_('Profiles')),ProgramLink('Users/User.php',_('General Info'))).'</TD></TR></TABLE>';

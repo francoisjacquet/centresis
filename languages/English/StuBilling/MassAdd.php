@@ -5,11 +5,11 @@ if($_REQUEST[modfunc]=='update')
 {
 	if(DeletePrompt('fee to all students '.(($_REQUEST[grade])?'in '.GetGrade($_REQUEST[grade]):'').' '.(($_REQUEST[school])?'at '.GetSchool($_REQUEST[school]):''),'apply'))
 	{
-		$_REQUEST['date'] = date("Y-m-d", strtotime($_REQUEST['day'] . '-' . $_REQUEST['month'] . '-' . $_REQUEST['year']));
+		$_REQUEST['date'] = $_REQUEST['day'] . '-' . $_REQUEST['month'] . '-' . $_REQUEST['year'];
 		if($_REQUEST['date']=='--')
 			$_REQUEST['date']='';
 		$effective_date = DBDate();
-		$global_id = DBGet(DBQuery("SELECT ".db_nextval('STU_BILLING_GLOABL').' AS GLOBAL_ID'.FROM_DUAL));
+		$global_id = DBGet(DBQuery("SELECT ".db_seq_nextval('STU_BILLING_GLOABL_SEQ').' AS GLOBAL_ID'.FROM_DUAL));
 		if($_REQUEST['defined'])
 		{
 			$sql = "SELECT SYEAR,TITLE,AMOUNT,DUE_DATE,ACCOUNT_ID FROM STU_BILLING_DEFINED_FEES WHERE ID='$_REQUEST[defined]'";
@@ -24,7 +24,7 @@ if($_REQUEST[modfunc]=='update')
 
 		$sql = "INSERT INTO STU_BILLING_FEES 
 					(ID,GLOBAL_ID,ACCOUNT_ID,STUDENT_ID,TITLE,AMOUNT,EFFECTIVE_DATE,DUE_DATE,SYEAR,SCHOOL,GRADE) 
-					(SELECT ".db_nextval('STU_BILLING_FEES').",".$global_id[1][GLOBAL_ID].",'".$_REQUEST['account_id']."',ssm.STUDENT_ID,
+					(SELECT ".db_seq_nextval('STU_BILLING_FEES_SEQ').",".$global_id[1][GLOBAL_ID].",'".$_REQUEST['account_id']."',ssm.STUDENT_ID,
 						'".$_REQUEST['title']."','".$_REQUEST['amount']."','$effective_date',
 						'".$_REQUEST['date']."','".$_REQUEST['syear']."',
 						'".$_REQUEST['school']."','".$_REQUEST['grade']."'
@@ -67,7 +67,7 @@ if(!$_REQUEST[modfunc])
 	
 	$functions = array('ACCOUNT_ID'=>'getAccount','DUE_DATE'=>'ProperDate','SYEAR'=>'DispYear','SCHOOL'=>'GetSchool','GRADE'=>'GetGrade');
 	$RET = DBGet(DBQuery('SELECT DISTINCT sb.GLOBAL_ID,sb.TITLE,sb.AMOUNT,sb.ACCOUNT_ID,
-							DATE_FORMAT(sb.DUE_DATE,\'%d-%b-%y\') as DUE_DATE,sb.SYEAR,sb.SCHOOL,sb.GRADE 
+							to_char(sb.DUE_DATE,\'dd-MON-yy\') as DUE_DATE,sb.SYEAR,sb.SCHOOL,sb.GRADE 
 						FROM STU_BILLING_FEES sb WHERE GLOBAL_ID IS NOT NULL ORDER BY sb.GLOBAL_ID'),$functions);
 		
 	$columns = array('TITLE'=>'Title','AMOUNT'=>'Amount','ACCOUNT_ID'=>'Account','DUE_DATE'=>'Due Date','SYEAR'=>'School Year','SCHOOL'=>'School','GRADE'=>'Grade');

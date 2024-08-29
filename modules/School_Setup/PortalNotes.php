@@ -29,7 +29,7 @@ if($_REQUEST['day_values'] && $_POST['day_values'])
 		$_POST['values'] = $_REQUEST['values'];
 }
 
-$profiles_RET = DBGet(DBQuery("SELECT ID,TITLE FROM user_profiles ORDER BY ID"));
+$profiles_RET = DBGet(DBQuery("SELECT ID,TITLE FROM USER_PROFILES ORDER BY ID"));
 if((($_REQUEST['profiles'] && $_POST['profiles']) || ($_REQUEST['values'] && $_POST['values'])) && AllowEdit())
 {
 	$notes_RET = DBGet(DBQuery("SELECT ID FROM PORTAL_NOTES WHERE SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'"));
@@ -95,8 +95,8 @@ if($_REQUEST['values'] && $_POST['values'] && AllowEdit())
 
 			$sql = "INSERT INTO PORTAL_NOTES ";
 
-			$fields = 'SCHOOL_ID,SYEAR,PUBLISHED_DATE,PUBLISHED_USER,';
-			$values = "'".UserSchool()."','".UserSyear()."',CURRENT_TIMESTAMP,'".User('STAFF_ID')."',";
+			$fields = 'ID,SCHOOL_ID,SYEAR,PUBLISHED_DATE,PUBLISHED_USER,';
+			$values = db_seq_nextval('PORTAL_NOTES_SEQ').",'".UserSchool()."','".UserSyear()."',CURRENT_TIMESTAMP,'".User('STAFF_ID')."',";
 
 			$go = 0;
 			foreach($columns as $column=>$value)
@@ -104,11 +104,7 @@ if($_REQUEST['values'] && $_POST['values'] && AllowEdit())
 				if($value)
 				{
 					$fields .= $column.',';
-					if($column=='START_DATE' || $column=='END_DATE') :
-						$values .= "'".str_replace("\'","''",date("Y-m-d", strtotime($value)))."',";
-					else:
-						$values .= "'".str_replace("\'","''",$value)."',";
-					endif;
+					$values .= "'".str_replace("\'","''",$value)."',";
 					$go = true;
 				}
 			}
@@ -193,7 +189,7 @@ function _makePublishing($value,$name)
 	$return .= '<TR><TD width=100% colspan=4 bgcolor=black height=1></TD></TR><TR><TD colspan=4>';
 
 	if(!$profiles_RET)
-		$profiles_RET = DBGet(DBQuery("SELECT ID,TITLE FROM user_profiles ORDER BY ID"));
+		$profiles_RET = DBGet(DBQuery("SELECT ID,TITLE FROM USER_PROFILES ORDER BY ID"));
 
 	$return .= '<TABLE border=0 cellspacing=0 cellpadding=0 class=LO_field><TR><TD colspan=4><b>'.Localize('colon',_('Visible To')).'</b></TD></TR>';
 	foreach(array('admin'=>_('Administrator w/Custom'),'teacher'=>_('Teacher w/Custom'),'parent'=>_('Parent w/Custom')) as $profile_id=>$profile)

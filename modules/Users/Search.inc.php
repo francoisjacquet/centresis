@@ -33,9 +33,9 @@ if($_REQUEST['search_modfunc']=='search_fnc' || !$_REQUEST['search_modfunc'])
 			echo '<TR><TD align=right width=120>'._('User ID').'</TD><TD><input type=text name="usrid" size=30></TD></TR>';
 			echo '<TR><TD align=right width=120>'._('Username').'</TD><TD><INPUT type=text name="username" size=30></TD></TR>';
 			if(User('PROFILE')=='admin')
-				$options = array(''=>'N/A','admin'=>_('Administrator'),'teacher'=>_('Teacher'),'parent'=>_('Parent'),'none'=>_('No Access'));
+				$options = array(''=>'N/A','admin'=>_('Administrator'),'teacher'=>_('Teacher')); // ,'parent'=>_('Parent'),'none'=>_('No Access'));
 			else
-				$options = array(''=>'N/A','teacher'=>_('Teacher'),'parent'=>_('Parent'));
+				$options = array(''=>'N/A','teacher'=>_('Teacher')); // ,'parent'=>_('Parent'));
 			if($extra['profile'])
 				$options = array($extra['profile']=>$options[$extra['profile']]);
 			echo '<TR><TD align=right width=120>'._('Profile').'</TD><TD><SELECT name=profile>';

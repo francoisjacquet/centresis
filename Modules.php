@@ -12,9 +12,9 @@ if(!isset($_REQUEST['_CENTRE_PDF']))
 	Warehouse('header');
 
 	//if(strpos($_REQUEST['modname'],'misc/')===false && $_REQUEST['modname']!='Students/Student.php' && $_REQUEST['modname']!='School_Setup/Calendar.php' && $_REQUEST['modname']!='Scheduling/Schedule.php' && $_REQUEST['modname']!='Attendance/Percent.php' && $_REQUEST['modname']!='Attendance/Percent.php?list_by_day=true' && $_REQUEST['modname']!='Scheduling/MassRequests.php' && $_REQUEST['modname']!='Scheduling/MassSchedule.php' && $_REQUEST['modname']!='Student_Billing/Fees.php')
-	if(strpos($_REQUEST['modname'],'misc/')===false && strpos($_REQUEST['modname'],'Student_Billing/')===false)
+	if(strpos($_REQUEST['modname'],'misc/')===false)
 		echo '<script language="JavaScript">if(window == top  && (!window.opener || window.opener.location.href.substring(0,(window.opener.location.href.indexOf("&")!=-1?window.opener.location.href.indexOf("&"):window.opener.location.href.replace("#","").length))!=window.location.href.substring(0,(window.location.href.indexOf("&")!=-1?window.location.href.indexOf("&"):window.location.href.replace("#","").length)))) window.location.href = "index.php";</script>';
-	echo "<BODY marginwidth=0 leftmargin=0 border=0 onload='doOnload();' >";
+	echo "<BODY marginwidth=0 leftmargin=0 border=0 onload='doOnload();' background=assets/bg.gif>";
 	echo '<DIV id="Migoicons" style="visibility:hidden;position:absolute;z-index:1000;top:-100"></DIV><SCRIPT language="JavaScript1.2"  type="text/javascript">var TipId="Migoicons";var FiltersEnabled = 1;mig_clay();</SCRIPT>';
 	echo "<TABLE width=100% height=100% border=0 cellpadding=0><TR><TD valign=top>";
 }
@@ -38,14 +38,14 @@ if($_REQUEST['modname'])
 	else
 		$modname = $_REQUEST['modname'];
 
-	if(!$_REQUEST['LO_save'] && !isset($_REQUEST['_CENTRE_PDF']) && ((strpos($modname,'misc/')===false || $modname=='misc/Registration.php' || $modname=='misc/Export.php' || $modname=='misc/Portal.php') || (strpos($modname,'Student_Billing/')===false || $modname=='Student_Billing/return.php' || $modname=='Student_Billing/check-profile.php')))
+	if(!$_REQUEST['LO_save'] && !isset($_REQUEST['_CENTRE_PDF']) && (strpos($modname,'misc/')===false || $modname=='misc/Registration.php' || $modname=='misc/Export.php' || $modname=='misc/Portal.php'))
 		$_SESSION['_REQUEST_vars'] = $_REQUEST;
 
 	$allowed = false;
 	include 'Menu.php';
 	foreach($_CENTRE['Menu'] as $modcat=>$programs)
 	{
-		if($_REQUEST['modname']==$modcat.'/Search.php')
+		if($_REQUEST['modname']==$_CENTRE['MenuSearch'][$modcat])
 		{
 			$allowed = true;
 			break;
@@ -59,7 +59,7 @@ if($_REQUEST['modname'])
 			}
 		}
 	}
-	if(substr($_REQUEST['modname'],0,5)=='misc/' || substr($_REQUEST['modname'],0,16)=='Student_Billing/')
+	if(substr($_REQUEST['modname'],0,5)=='misc/')
 		$allowed = true;
 
 	if($allowed)
@@ -106,7 +106,7 @@ if(!isset($_REQUEST['_CENTRE_PDF']))
         monthField     :    "monthSelect'.$i.'",
         dayField       :    "daySelect'.$i.'",
         yearField      :    "yearSelect'.$i.'",
-        //ifFormat       :    "%d-%m-%y",
+        ifFormat       :    "%d-%b-%y",
         button         :    "trigger'.$i.'",
         align          :    "Tl",
         singleClick    :    true

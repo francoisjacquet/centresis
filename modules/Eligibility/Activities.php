@@ -5,7 +5,7 @@ if($_REQUEST['month_values'] && $_POST['month_values'])
 	{
 		foreach($columns as $column=>$value)
 		{
-			$_REQUEST['values'][$id][$column] = date("Y-m-d", strtotime($_REQUEST['day_values'][$id][$column].'-'.$value.'-'.$_REQUEST['year_values'][$id][$column]));
+			$_REQUEST['values'][$id][$column] = $_REQUEST['day_values'][$id][$column].'-'.$value.'-'.$_REQUEST['year_values'][$id][$column];
 			if($_REQUEST['values'][$id][$column]=='--')
 				$_REQUEST['values'][$id][$column] = '';
 		}
@@ -33,7 +33,7 @@ if($_REQUEST['values'] && $_POST['values'])
 			$sql = "INSERT INTO ELIGIBILITY_ACTIVITIES ";
 
 			$fields = 'ID,SCHOOL_ID,SYEAR,';
-			$values = db_nextval('ELIGIBILITY_ACTIVITIES').",'".UserSchool()."','".UserSyear()."',";
+			$values = db_seq_nextval('ELIGIBILITY_ACTIVITIES_SEQ').",'".UserSchool()."','".UserSyear()."',";
 
 			$go = 0;
 			foreach($columns as $column=>$value)
@@ -46,6 +46,7 @@ if($_REQUEST['values'] && $_POST['values'])
 				}
 			}
 			$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
+			
 			if($go)
 				DBQuery($sql);
 		}

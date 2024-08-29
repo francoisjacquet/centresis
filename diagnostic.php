@@ -33,7 +33,7 @@ else
 			$error[] = 'Centre cannot connect to the Postgres database.  Either Postgres is not running, it was not started with the -i option, or connections from this host are not allowed in the pg_hba.conf file. Last Postgres Error: '.pg_last_error();
 		else
 		{
-			$result = @pg_exec($connection,'SELECT * FROM config');
+			$result = @pg_exec($connection,'SELECT * FROM CONFIG');
 			if($result===false)
 				$errstring = pg_last_error($connection);
 

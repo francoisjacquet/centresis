@@ -56,7 +56,7 @@ if($function('Confirm Scheduler Run','Are you sure you want to run the scheduler
 	$periods_RET = DBGet($QI,array(),array('COURSE_ID','COURSE_WEIGHT','COURSE_PERIOD_ID'));
 
 	// GET LIST OF STUDENTS WITH THEIR GENDER & HOUSE_CODE
-	$sql = "SELECT s.STUDENT_ID,CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) AS FULL_NAME,s.GENDER FROM STUDENTS s,STUDENT_ENROLLMENT ssm WHERE (('".DBDate()."' BETWEEN ssm.START_DATE AND ssm.END_DATE OR ssm.END_DATE IS NULL)) AND ssm.SCHOOL_ID='".UserSchool()."' AND ssm.SYEAR='".UserSyear()."' AND s.STUDENT_ID=ssm.STUDENT_ID";
+	$sql = "SELECT s.STUDENT_ID,s.LAST_NAME||', '||s.FIRST_NAME AS FULL_NAME,s.GENDER FROM STUDENTS s,STUDENT_ENROLLMENT ssm WHERE (('".DBDate()."' BETWEEN ssm.START_DATE AND ssm.END_DATE OR ssm.END_DATE IS NULL)) AND ssm.SCHOOL_ID='".UserSchool()."' AND ssm.SYEAR='".UserSyear()."' AND s.STUDENT_ID=ssm.STUDENT_ID";
 	if($_SCHEDULER['student_id'])
 		$sql .= " AND ssm.STUDENT_ID='$_SCHEDULER[student_id]'";
 	$QI = DBQuery($sql);
@@ -577,7 +577,7 @@ if($function('Confirm Scheduler Run','Are you sure you want to run the scheduler
 		echo '<b>'.(100-($count*100/count($students_RET))).'% of students could	be scheduled completely<BR>';
 		echo 'Total Unfinished Students/Requests: '.$count.' / '.$count_requests.'</b>';
 		echo '<TABLE><TR><TD valign=top>';
-		ListOutput($table,array('STUDENT_ID'=>'Student','UNSCHEDULED'=>'Unfilled Requests'),'.','.','','',array('sort'=>false,'search'=>false));
+		ListOutput($table,array('STUDENT_ID'=>'Student','UNSCHEDULED'=>'Unfilled Requests'),'','','','',array('sort'=>false,'search'=>false));
 		echo '</TD><TD valign=top>';
 		$i = 0;
 		foreach($courses as $course_id=>$count)

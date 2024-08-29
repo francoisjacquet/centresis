@@ -43,6 +43,7 @@ function db_start()
         // TRANSLATION: do NOT translate these since error messages need to stay in English for technical support
     	db_show_error("",sprintf('Could not Connect to Database Server \'%s\'',$DatabaseServer),$errstring);
 	}
+
 	return $connection;
 }
 
@@ -74,6 +75,7 @@ function DBQuery($sql)
 		break;
 		case 'postgres':
             // TRANSLATION: do NOT translate these since error messages need to stay in English for technical support
+            @pg_exec($connection,"SET TIME ZONE '".date_default_timezone_get()."'");
 			$sql = ereg_replace("([,\(=])[\r\n\t ]*''",'\\1NULL',$sql);
 			$result = @pg_exec($connection,$sql);
 			if($result===false)
@@ -87,14 +89,7 @@ function DBQuery($sql)
 			mysql_query("SET SESSION TRANSACTION ISOLATION LEVEL SERIALIZABLE");
 			mysql_query("SET SESSION SQL_MODE='ANSI'");
 			$sql = ereg_replace("([,\(=])[\r\n\t ]*''",'\\1NULL',$sql);
-
-			$tbls = array("/ADDRESS/","/address_FIELD_CATEGORIES/","/address_FIELDS/","/ASSESSMENT_EXAMS/","/ASSESSMENT_SCORES/","/ASSESSMENT_SECTIONS/","/ATTENDANCE_CALENDAR/","/attendance_calendarS/","/ATTENDANCE_CODE_CATEGORIES/","/ATTENDANCE_CODES/","/ATTENDANCE_COMPLETED/","/ATTENDANCE_DAY/","/ATTENDANCE_PERIOD/","/BILLING_ACCOUNTS/","/BILLING_ACCOUNTS_JOIN_STUDENTS/","/BILLING_BILL_ITEMS/","/BILLING_BILLS/","/BILLING_FEE_CATEGORIES/","/BILLING_FEES/","/billing_fees_CATEGORIES/","/BILLING_PAYMENTS/","/BILLING_PLAN_DATES/","/BILLING_PLANS/","/BILLING_TRANSACTION_ITEMS/","/BILLING_TRANSACTIONS/","/CALENDAR_EVENTS/","/CONFIG/","/COURSE_DETAILS/","/COURSE_PERIODS/","/COURSE_SUBJECTS/","/COURSES/","/CUSTOM/","/custom_FIELDS/","/DISCIPLINE_CATEGORIES/","/DISCIPLINE_REFERRALS/","/ELIGIBILITY/","/eligibility_ACTIVITIES/","/eligibility_COMPLETED/","/ENROLL_GRADE/","/FOOD_SERVICE_ACCOUNTS/","/FOOD_SERVICE_CATEGORIES/","/FOOD_SERVICE_ITEMS/","/FOOD_SERVICE_MENU_ITEMS/","/FOOD_SERVICE_MENUS/","/FOOD_SERVICE_STAFF_ACCOUNTS/","/FOOD_SERVICE_STAFF_TRANSACTION_ITEMS/","/FOOD_SERVICE_STAFF_TRANSACTIONS/","/FOOD_SERVICE_STUDENT_ACCOUNTS/","/FOOD_SERVICE_TRANSACTION_ITEMS/","/FOOD_SERVICE_TRANSACTIONS/","/GRADEBOOK_ASSIGNMENT_TYPES/","/GRADEBOOK_ASSIGNMENTS/","/GRADEBOOK_GRADES/","/GRADES_COMPLETED/","/HISTORY_MARKING_PERIODS/","/HOMEWORK_PERIOD/","/LUNCH_CONFIG/","/LUNCH_MENU/","/LUNCH_MENU_CATEGORIES/","/LUNCH_PERIOD/","/LUNCH_TRANSACTIONS/","/LUNCH_USERS/","/MARKING_PERIODS/","/PEOPLE/","/people_FIELD_CATEGORIES/","/people_FIELDS/","/people_JOIN_CONTACTS/","/PORTAL_NOTES/","/PROFILE_EXCEPTIONS/","/PROGRAM_CONFIG/","/PROGRAM_USER_config/","/REPORT_CARD_COMMENT_CATEGORIES/","/REPORT_CARD_COMMENT_CODE_SCALES/","/REPORT_CARD_COMMENT_CODES/","/REPORT_CARD_COMMENTS/","/REPORT_CARD_GRADE_SCALES/","/REPORT_CARD_GRADES/","/SCHEDULE/","/schedule_REQUESTS/","/SCHOOL_GRADELEVELS/","/SCHOOL_marking_periods/","/SCHOOL_PERIODS/","/SCHOOLS/","/STAFF/","/staff_EXCEPTIONS/","/staff_FIELD_CATEGORIES/","/staff_FIELDS/","/STUDENT_eligibility_activities/","/STUDENT_ENROLLMENT/","/student_enrollment_CODES/","/STUDENT_FIELD_CATEGORIES/","/STUDENT_GPA_CALCULATED/","/STUDENT_GPA_RUNNING/","/STUDENT_MEDICAL/","/student_medical_ALERTS/","/student_medical_VISITS/","/STUDENT_MP_COMMENTS/","/STUDENT_MP_STATS/","/STUDENT_report_card_comments/","/STUDENT_report_card_grades/","/TABLES_IN_CSBETA/","/STUDENT_TEST_CATEGORIES/","/STUDENT_TEST_SCORES/","/STUDENTS/","/students_JOIN_address/","/students_JOIN_FEES/","/students_JOIN_people/","/students_JOIN_USERS/","/TRANSCRIPT_GRADES/","/USER_PROFILES/","/VOLUNTEER_LOG/","/WORKBOOK_PERIOD/");
-			
-			$tbl_patterns = array("address","address_field_categories","address_fields","assessment_exams","assessment_scores","assessment_sections","attendance_calendar","attendance_calendars","attendance_code_categories","attendance_codes","attendance_completed","attendance_day","attendance_period","billing_accounts","billing_accounts_join_students","billing_bill_items","billing_bills","billing_fee_categories","billing_fees","billing_fees_categories","billing_payments","billing_plan_dates","billing_plans","billing_transaction_items","billing_transactions","calendar_events","config","course_details","course_periods","course_subjects","courses","custom","custom_fields","discipline_categories","discipline_referrals","eligibility","eligibility_activities","eligibility_completed","enroll_grade","food_service_accounts","food_service_categories","food_service_items","food_service_menu_items","food_service_menus","food_service_staff_accounts","food_service_staff_transaction_items","food_service_staff_transactions","food_service_student_accounts","food_service_transaction_items","food_service_transactions","gradebook_assignment_types","gradebook_assignments","gradebook_grades","grades_completed","history_marking_periods","homework_period","lunch_config","lunch_menu","lunch_menu_categories","lunch_period","lunch_transactions","lunch_users","marking_periods","people","people_field_categories","people_fields","people_join_contacts","portal_notes","profile_exceptions","program_config","program_user_config","report_card_comment_categories","report_card_comment_code_scales","report_card_comment_codes","report_card_comments","report_card_grade_scales","report_card_grades","schedule","schedule_requests","school_gradelevels","school_marking_periods","school_periods","schools","staff","staff_exceptions","staff_field_categories","staff_fields","student_eligibility_activities","student_enrollment","student_enrollment_codes","student_field_categories","student_gpa_calculated","student_gpa_running","student_medical","student_medical_alerts","student_medical_visits","student_mp_comments","student_mp_stats","student_report_card_comments","student_report_card_grades","tables_in_csbeta","student_test_categories","student_test_scores","students","students_join_address","students_join_fees","students_join_people","students_join_users","transcript_grades","user_profiles","volunteer_log","workbook_period");
-			
-			$sql = preg_replace($tbls, $tbl_patterns, $sql);
 			$result = mysql_query($sql);
-			#echo $sql.'<BR><BR>'; // nick
 			if($result===false)
 			{
 				$errstring = mysql_error();
@@ -141,9 +136,9 @@ function db_fetch_row($result)
 	return @array_change_key_case($return,CASE_UPPER);
 }
 
-// returns code to go into SQL statement for accessing the next value of a sequenc	function db_nextval($seqname)
-function db_nextval($seqname)
-{	global $DatabaseName, $DatabaseType;
+// returns code to go into SQL statement for accessing the next value of a sequenc	function db_seq_nextval($seqname)
+function db_seq_nextval($seqname)
+{	global $DatabaseType;
 
 	if($DatabaseType=='oracle')
 		$seq = $seqname.".nextval";
@@ -151,11 +146,8 @@ function db_nextval($seqname)
 		$seq = "nextval('".$seqname."')";
 	elseif($DatabaseType=='mysql')
 	{
-		$seqname = str_replace("_SEQ", "", $seqname);
-		$results = db_fetch_row(DBQuery("SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = '".$DatabaseName."' AND TABLE_NAME = '".$seqname."'"));
-		$seq = $results['AUTO_INCREMENT'];
-		//echo "SELECT AUTO_INCREMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = '".$DatabaseName."' AND TABLE_NAME = '".$seqname."'";
-		//echo $seq;
+		DBQuery("UPDATE $seqname SET ID=last_insert_id(ID+1)");
+		$seq = 'last_insert_id()';
 	}
 
 	return $seq;
@@ -165,7 +157,7 @@ function db_nextval($seqname)
 function db_trans_start($connection)
 {	global $DatabaseType;
 
-	if($DatabaseType=='postres')
+	if($DatabaseType=='postgres')
 		db_trans_query($connection,"BEGIN WORK");
 }
 
@@ -461,20 +453,4 @@ function DBEscapeString($input)
 {
 	return preg_replace("/'/","''",$input);
 }
-
-function EncryptPWD($str)
-{
-	$key = 'password to (en/de)crypt';
-	$encrypted = base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, md5($key), $str, MCRYPT_MODE_CBC, md5(md5($key))));
-	return $encrypted;
-}
-
-function DecryptPWD($str)
-{
-	$key = 'password to (en/de)crypt';
-	$decrypted = rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, md5($key), base64_decode($str), MCRYPT_MODE_CBC, md5(md5($key))), "\0");
-	return $decrypted;
-}
-
-
 ?>

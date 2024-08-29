@@ -30,6 +30,6 @@ foreach($menu_RET as $school=>$items)
 		$RET[] = array('TITLE'=>$item[TITLE],'REG_COUNT'=>$counts_RET[$item[ID]]['REG'][1]['COUNT'],'FREE_COUNT'=>$counts_RET[$item[ID]]['FREE'][1]['COUNT'],'REDUCED_COUNT'=>$counts_RET[$item[ID]]['REDUCED'][1]['COUNT'],'TOTAL'=>$total);
 	}
 	unset($RET[0]);
-	ListOutput($RET,$columns,'.','.','',array(),array('save'=>false));
+	ListOutput($RET,$columns,'','','',array(),array('save'=>false));
 }
 ?>

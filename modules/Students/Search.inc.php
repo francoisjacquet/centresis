@@ -190,11 +190,11 @@ else
 		}
 		if($_REQUEST['address_group'])
 		{
-            ListOutput($students_RET,$columns,'Family','Families',$link,$extra['LO_group'],$extra['options']);
+            ListOutput($students_RET,$columns,_('Family'),_('Families'),$link,$extra['LO_group'],$extra['options']);
 		}
 		else
 		{
-            ListOutput($students_RET,$columns,'Student','Students',$link,$extra['LO_group'],$extra['options']);
+            ListOutput($students_RET,$columns,_('Student'),_('Students'),$link,$extra['LO_group'],$extra['options']);
 		}
 	}
 	elseif(count($students_RET)==1)

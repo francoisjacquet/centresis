@@ -1,14 +1,6 @@
 <?php
 DrawHeader(ProgramTitle());
 
-	global $_CENTRE;
-	if(User('PERSON_ID')!="") :
-		#User('STAFF_ID') = $_SESSION['PERSON_ID'];
-		$user_staff_id = User('PERSON_ID');
-	else :
-		$user_staff_id = User('STAFF_ID');
-	endif;
-
 if($_REQUEST['values'] && $_POST['values'])
 {
 	if($_REQUEST['tab']=='password')
@@ -16,20 +8,32 @@ if($_REQUEST['values'] && $_POST['values'])
 		if(strtolower($_REQUEST['values']['new'])!=strtolower($_REQUEST['values']['verify']))
 			$error = _('Your new passwords did not match.');
 		else
-		{
-			$password_RET = DBGet(DBQuery("SELECT PASSWORD FROM staff WHERE STAFF_ID='".$user_staff_id."' AND SYEAR='".UserSyear()."'"));
-			if(strtolower(DecryptPWD($password_RET[1]['PASSWORD']))!=strtolower($_REQUEST['values']['current']))
+		if (User('PERSON_ID'))
+        {
+			$password_RET = DBGet(DBQuery("SELECT password FROM people WHERE person_id='".User('PERSON_ID')."'"));
+			if(strtolower($password_RET[1]['PASSWORD'])!=strtolower($_REQUEST['values']['current']))
 				$error = _('Your current password was incorrect.');
 			else
 			{
-				DBQuery("UPDATE staff SET PASSWORD='".EncryptPWD($_REQUEST['values']['new'])."' WHERE STAFF_ID='".$user_staff_id."' AND SYEAR='".UserSyear()."'");
+				DBQuery("UPDATE people SET password='".$_REQUEST['values']['new']."' WHERE person_id='".User('PERSON_ID')."'");
 				$note = _('Your new password was saved.');
 			}
 		}
+        else
+        {
+            $password_RET = DBGet(DBQuery("SELECT PASSWORD FROM STAFF WHERE STAFF_ID='".User('STAFF_ID')."' AND SYEAR='".UserSyear()."'"));
+            if(strtolower($password_RET[1]['PASSWORD'])!=strtolower($_REQUEST['values']['current']))
+                $error = _('Your current password was incorrect.');
+            else
+            {
+                DBQuery("UPDATE STAFF SET PASSWORD='".$_REQUEST['values']['new']."' WHERE STAFF_ID='".User('STAFF_ID')."' AND SYEAR='".UserSyear()."'");
+                $note = _('Your new password was saved.');
+            }
+        }
 	}
 	else
 	{
-		$current_RET = DBGet(DBQuery("SELECT TITLE,VALUE,PROGRAM FROM PROGRAM_USER_CONFIG WHERE USER_ID='".$user_staff_id."' AND PROGRAM IN ('Preferences','StudentFieldsSearch','StudentFieldsView','WidgetsSearch','StaffFieldsSearch','StaffFieldsView','StaffWidgetsSearch')"),array(),array('PROGRAM','TITLE'));
+		$current_RET = DBGet(DBQuery("SELECT TITLE,VALUE,PROGRAM FROM PROGRAM_USER_CONFIG WHERE USER_ID='".User('STAFF_ID')."' AND PROGRAM IN ('Preferences','StudentFieldsSearch','StudentFieldsView','WidgetsSearch','StaffFieldsSearch','StaffFieldsView','StaffWidgetsSearch')"),array(),array('PROGRAM','TITLE'));
 
 		if($_REQUEST['tab']=='student_listing' && $_REQUEST['values']['Preferences']['SEARCH']!='Y')
 			$_REQUEST['values']['Preferences']['SEARCH'] = 'N';
@@ -54,14 +58,14 @@ if($_REQUEST['values'] && $_POST['values'])
 		}
 		if($_REQUEST['tab']=='student_fields' || $_REQUEST['tab']=='widgets' || $_REQUEST['tab']=='staff_fields' || $_REQUEST['tab']=='staff_widgets')
 		{
-			DBQuery("DELETE FROM PROGRAM_USER_CONFIG WHERE USER_ID='".$user_staff_id."' AND PROGRAM".($_REQUEST['tab']=='student_fields'?" IN ('StudentFieldsSearch','StudentFieldsView')":($_REQUEST['tab']=='widgets'?"='WidgetsSearch'":($_REQUEST['tab']=='staff_fields'?" IN ('StaffFieldsSearch','StaffFieldsView')":"='StaffWidgetsSearch'"))));
+			DBQuery("DELETE FROM PROGRAM_USER_CONFIG WHERE USER_ID='".User('STAFF_ID')."' AND PROGRAM".($_REQUEST['tab']=='student_fields'?" IN ('StudentFieldsSearch','StudentFieldsView')":($_REQUEST['tab']=='widgets'?"='WidgetsSearch'":($_REQUEST['tab']=='staff_fields'?" IN ('StaffFieldsSearch','StaffFieldsView')":"='StaffWidgetsSearch'"))));
 
 			foreach($_REQUEST['values'] as $program=>$values)
 			{
 				foreach($values as $name=>$value)
 				{
 					if(isset($value))
-						DBQuery("INSERT INTO PROGRAM_USER_CONFIG (USER_ID,PROGRAM,TITLE,VALUE) values('".$user_staff_id."','$program','$name','$value')");
+						DBQuery("INSERT INTO PROGRAM_USER_CONFIG (USER_ID,PROGRAM,TITLE,VALUE) values('".User('STAFF_ID')."','$program','$name','$value')");
 				}
 			}
 		}
@@ -72,11 +76,11 @@ if($_REQUEST['values'] && $_POST['values'])
 				foreach($values as $name=>$value)
 				{
 					if(!$current_RET[$program][$name] && $value!='')
-						DBQuery("INSERT INTO PROGRAM_USER_CONFIG (USER_ID,PROGRAM,TITLE,VALUE) values('".$user_staff_id."','$program','$name','$value')");
+						DBQuery("INSERT INTO PROGRAM_USER_CONFIG (USER_ID,PROGRAM,TITLE,VALUE) values('".User('STAFF_ID')."','$program','$name','$value')");
 					elseif($value!='')
-						DBQuery("UPDATE PROGRAM_USER_CONFIG SET VALUE='$value' WHERE USER_ID='".$user_staff_id."' AND PROGRAM='$program' AND TITLE='$name'");
+						DBQuery("UPDATE PROGRAM_USER_CONFIG SET VALUE='$value' WHERE USER_ID='".User('STAFF_ID')."' AND PROGRAM='$program' AND TITLE='$name'");
 					else
-						DBQuery("DELETE FROM PROGRAM_USER_CONFIG WHERE USER_ID='".$user_staff_id."' AND PROGRAM='$program' AND TITLE='$name'");
+						DBQuery("DELETE FROM PROGRAM_USER_CONFIG WHERE USER_ID='".User('STAFF_ID')."' AND PROGRAM='$program' AND TITLE='$name'");
 				}
 			}
 		}
@@ -93,26 +97,36 @@ unset($_SESSION['_REQUEST_vars']['search_modfunc']);
 
 if(!$_REQUEST['modfunc'])
 {
-	$current_RET = DBGet(DBQuery("SELECT TITLE,VALUE,PROGRAM FROM PROGRAM_USER_CONFIG WHERE USER_ID='".$user_staff_id."' AND PROGRAM IN ('Preferences','StudentFieldsSearch','StudentFieldsView','WidgetsSearch','StaffFieldsSearch','StaffFieldsView','StaffWidgetsSearch') "),array(),array('PROGRAM','TITLE'));
+    if (!User('PERSON_ID')) {
+	    $current_RET = DBGet(DBQuery("SELECT TITLE,VALUE,PROGRAM FROM PROGRAM_USER_CONFIG WHERE USER_ID='".User('STAFF_ID')."' AND PROGRAM IN ('Preferences','StudentFieldsSearch','StudentFieldsView','WidgetsSearch','StaffFieldsSearch','StaffFieldsView','StaffWidgetsSearch') "),array(),array('PROGRAM','TITLE'));
 
-	if(!$_REQUEST['tab'])
-		$_REQUEST['tab'] = 'display_options';
+	    if(!$_REQUEST['tab'])
+		    $_REQUEST['tab'] = 'display_options';
 
-	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&amp;tab=$_REQUEST[tab] method=POST>";
-	DrawHeader('','<INPUT type=submit value="'._('Save').'">');
-	echo '<BR>';
+	    echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&amp;tab=$_REQUEST[tab] method=POST>";
+	    DrawHeader('','<INPUT type=submit value="'._('Save').'">');
+	    echo '<BR>';
 
-	if(User('PROFILE')=='admin' || User('PROFILE')=='teacher')
-	{
-		$tabs = array(array('title'=>_('Display Options'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=display_options"),array('title'=>_('Student Listing'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_listing"),array('title'=>_('Password'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=password"),array('title'=>_('Student Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_fields"),array('title'=>_('Widgets'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=widgets"));
-		if(User('PROFILE')=='admin')
-		{
-			$tabs[] = array('title'=>_('User Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=staff_fields");
-			$tabs[] = array('title'=>_('User Widgets'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=staff_widgets");
-		}
-	}
-	else
-		$tabs = array(array('title'=>_('Display Options'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=display_options"),array('title'=>_('Password'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=password"),array('title'=>_('Student Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_fields"));
+	    if(User('PROFILE')=='admin' || User('PROFILE')=='teacher')
+	    {
+		    $tabs = array(array('title'=>_('Display Options'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=display_options"),array('title'=>_('Student Listing'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_listing"),array('title'=>_('Password'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=password"),array('title'=>_('Student Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_fields"),array('title'=>_('Widgets'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=widgets"));
+		    if(User('PROFILE')=='admin')
+		    {
+			    $tabs[] = array('title'=>_('User Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=staff_fields");
+			    $tabs[] = array('title'=>_('User Widgets'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=staff_widgets");
+		    }
+	    }
+	    else
+		    $tabs = array(array('title'=>_('Display Options'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=display_options"),array('title'=>_('Password'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=password"),array('title'=>_('Student Fields'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=student_fields"));
+    } else {
+        $_REQUEST['tab'] = 'password';
+
+        echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&amp;tab=$_REQUEST[tab] method=POST>";
+        DrawHeader('','<INPUT type=submit value="'._('Save').'">');
+        echo '<BR>';
+
+        $tabs = array(array('title'=>_('Password'),'link'=>"Modules.php?modname=$_REQUEST[modname]&amp;tab=password"));
+    }
 
 	$_CENTRE['selected_tab'] = "Modules.php?modname=$_REQUEST[modname]&amp;tab=".$_REQUEST['tab'];
 	PopTable('header',$tabs);
@@ -157,7 +171,7 @@ if(!$_REQUEST['modfunc'])
 			closedir($handle);
 		}
 		echo '</TR></TABLE></TD></TR>';
-		$colors = array('#FFFFFF','#330099','#3366FF','#003333','#FF3300','#660000','#666666','#333366','#336633','purple','teal','firebrick','tan');
+		$colors = array('#330099','#3366FF','#003333','#FF3300','#660000','#666666','#333366','#336633','purple','teal','firebrick','tan');
 		echo '<TR><TD align=right><font color=gray>'._('Header Color').'</font></TD><TD><TABLE><TR>';
 		foreach($colors as $color)
 			echo '<TD bgcolor='.$color.'><INPUT type=radio name=values[Preferences][HEADER] value='.$color.((Preferences('HEADER')==$color)?' CHECKED':'').'></TD>';
@@ -175,13 +189,13 @@ if(!$_REQUEST['modfunc'])
 			echo '<TD bgcolor='.$color.'><INPUT type=radio name=values[Preferences][HIGHLIGHT] value='.$color.((Preferences('HIGHLIGHT')==$color)?' CHECKED':'').'></TD>';
 		echo '</TR></TABLE></TD></TR>';
 
-		$colors = array('#FFFFCC','gray','black','#333366');
+		$colors = array('gray','black','#333366');
 		echo '<TR><TD align=right><font color=gray>'._('Titles Color').'</font></TD><TD><TABLE><TR>';
 		foreach($colors as $color)
 			echo '<TD bgcolor='.$color.'><INPUT type=radio name=values[Preferences][TITLES] value='.$color.((Preferences('TITLES')==$color)?' CHECKED':'').'></TD>';
 		echo '</TR></TABLE></TD></TR>';
 
-		/*echo '<TR><TD align=right><font color=gray>'._('Date Format').'</font></TD><TD><SELECT name=values[Preferences][MONTH]>';
+		echo '<TR><TD align=right><font color=gray>'._('Date Format').'</font></TD><TD><SELECT name=values[Preferences][MONTH]>';
 		$values = array('F','M','m','n');
 		foreach($values as $value)
 			echo '<OPTION value='.$value.((Preferences('MONTH')==$value)?' SELECTED':'').'>'.date($value).'</OPTION>';
@@ -196,7 +210,7 @@ if(!$_REQUEST['modfunc'])
 		foreach($values as $value)
 			echo '<OPTION value="'.$value.'"'.((Preferences('YEAR')==$value || (!Preferences('YEAR') && !$value))?' SELECTED':'').'>'.date($value).'</OPTION>';
 		echo '</SELECT>';
-		echo '</TD></TR>';*/
+		echo '</TD></TR>';
 		echo '<TR><TD></TD><TD><INPUT type=checkbox name=values[Preferences][HIDE_ALERTS] value=Y'.((Preferences('HIDE_ALERTS')=='Y')?' CHECKED':'').'>'._('Disable login alerts').'</TD></TR>';
 		echo '<TR><TD></TD><TD><INPUT type=checkbox name=values[Preferences][HIDDEN] value=Y'.((Preferences('HIDDEN')=='Y')?' CHECKED':'').'>'._('Display data using hidden fields').'</TD></TR>';
 		echo '</TABLE>';
@@ -216,9 +230,9 @@ if(!$_REQUEST['modfunc'])
 	if($_REQUEST['tab']=='student_fields')
 	{
 		if(User('PROFILE_ID'))
-			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS SEARCH,'' AS DISPLAY FROM CUSTOM_FIELDS cf,STUDENT_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM PROFILE_EXCEPTIONS WHERE PROFILE_ID='".User('PROFILE_ID')."' AND MODNAME='Students/Student.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('SEARCH'=>'_make','DISPLAY'=>'_make'),array('CATEGORY'));
+			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS SEARCH,'' AS DISPLAY FROM CUSTOM_FIELDS cf,STUDENT_FIELD_CATEGORIES sfc WHERE cf.TABLE='students' AND sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM PROFILE_EXCEPTIONS WHERE PROFILE_ID='".User('PROFILE_ID')."' AND MODNAME='Students/Student.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('SEARCH'=>'_make','DISPLAY'=>'_make'),array('CATEGORY'));
 		else
-			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS SEARCH,'' AS DISPLAY FROM CUSTOM_FIELDS cf,STUDENT_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM STAFF_EXCEPTIONS WHERE USER_ID='".User('STAFF_ID')."' AND MODNAME='Students/Student.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('SEARCH'=>'_make','DISPLAY'=>'_make'),array('CATEGORY'));
+			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS SEARCH,'' AS DISPLAY FROM CUSTOM_FIELDS cf,STUDENT_FIELD_CATEGORIES sfc WHERE cf.TABLE='students' AND sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM STAFF_EXCEPTIONS WHERE USER_ID='".User('STAFF_ID')."' AND MODNAME='Students/Student.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('SEARCH'=>'_make','DISPLAY'=>'_make'),array('CATEGORY'));
         foreach ($custom_fields_RET as &$category_RET)
             foreach ($category_RET as &$field) {
                 $field['CATEGORY'] = '<b>'.ParseMLField($field['CATEGORY']).'</b>';
@@ -243,7 +257,7 @@ if(!$_REQUEST['modfunc'])
 			$columns = array('CATEGORY'=>'','TITLE'=>_('Field'),'SEARCH'=>_('Search'),'DISPLAY'=>_('Expanded View'));
 		else
 			$columns = array('CATEGORY'=>'','TITLE'=>_('Field'),'DISPLAY'=>_('Expanded View'));
-		ListOutput($custom_fields_RET,$columns,'.','.',array(),array(array('CATEGORY')));
+		ListOutput($custom_fields_RET,$columns,'','',array(),array(array('CATEGORY')));
 	}
 
 	if($_REQUEST['tab']=='widgets')
@@ -276,15 +290,15 @@ if(!$_REQUEST['modfunc'])
 
 		echo '<INPUT type=hidden name=values[WidgetsSearch]>';
 		$columns = array('TITLE'=>_('Widget'),'WIDGET'=>_('Search'));
-		ListOutput($widgets_RET,$columns,'.','.');
+		ListOutput($widgets_RET,$columns,'','');
 	}
 
 	if($_REQUEST['tab']=='staff_fields' && User('PROFILE')=='admin')
 	{
 		if(User('PROFILE_ID'))
-			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS STAFF_SEARCH,'' AS STAFF_DISPLAY FROM staff_FIELDS cf,STAFF_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM PROFILE_EXCEPTIONS WHERE PROFILE_ID='".User('PROFILE_ID')."' AND MODNAME='Users/User.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('STAFF_SEARCH'=>'_make','STAFF_DISPLAY'=>'_make'),array('CATEGORY'));
+			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS STAFF_SEARCH,'' AS STAFF_DISPLAY FROM STAFF_FIELDS cf,STAFF_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM PROFILE_EXCEPTIONS WHERE PROFILE_ID='".User('PROFILE_ID')."' AND MODNAME='Users/User.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('STAFF_SEARCH'=>'_make','STAFF_DISPLAY'=>'_make'),array('CATEGORY'));
 		else
-			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS STAFF_SEARCH,'' AS STAFF_DISPLAY FROM staff_FIELDS cf,STAFF_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM STAFF_EXCEPTIONS WHERE USER_ID='".User('STAFF_ID')."' AND MODNAME='Users/User.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('STAFF_SEARCH'=>'_make','STAFF_DISPLAY'=>'_make'),array('CATEGORY'));
+			$custom_fields_RET = DBGet(DBQuery("SELECT sfc.TITLE AS CATEGORY,cf.ID,cf.TITLE,'' AS STAFF_SEARCH,'' AS STAFF_DISPLAY FROM STAFF_FIELDS cf,STAFF_FIELD_CATEGORIES sfc WHERE sfc.ID=cf.CATEGORY_ID AND (SELECT CAN_USE FROM STAFF_EXCEPTIONS WHERE USER_ID='".User('STAFF_ID')."' AND MODNAME='Users/User.php&category_id='||cf.CATEGORY_ID)='Y' ORDER BY sfc.SORT_ORDER,sfc.TITLE,cf.SORT_ORDER,cf.TITLE"),array('STAFF_SEARCH'=>'_make','STAFF_DISPLAY'=>'_make'),array('CATEGORY'));
 
         foreach ($custom_fields_RET as &$category_RET)
             foreach ($category_RET as &$field) {
@@ -314,7 +328,7 @@ if(!$_REQUEST['modfunc'])
 
 		echo '<INPUT type=hidden name=values[StaffWidgetsSearch]>';
 		$columns = array('TITLE'=>_('Widget'),'STAFF_WIDGET'=>_('Search'));
-		ListOutput($widgets_RET,$columns,'.','.');
+		ListOutput($widgets_RET,$columns,'','');
 	}
 
 	echo '</fieldset>';

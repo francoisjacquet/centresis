@@ -12,7 +12,7 @@ else
 }
 
 DrawHeader(ProgramTitle());
-$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM attendance_code_categories WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY SORT_ORDER,TITLE"));
+$categories_RET = DBGet(DBQuery("SELECT ID,TITLE FROM ATTENDANCE_CODE_CATEGORIES WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY SORT_ORDER,TITLE"));
 if($_REQUEST['table']=='')
 	$_REQUEST['table'] = '0';
 $category_select = "<SELECT name=table onChange='this.form.submit();'><OPTION value='0'".($_REQUEST['table']=='0'?' SELECTED':'').">"._('Attendance')."</OPTION>";
@@ -20,7 +20,7 @@ foreach($categories_RET as $category)
 	$category_select .= "<OPTION value=$category[ID]".(($_REQUEST['table']==$category['ID'])?' SELECTED':'').">".$category['TITLE']."</OPTION>";
 $category_select .= "</SELECT>";
 
-$QI = DBQuery("SELECT sp.PERIOD_ID,sp.TITLE FROM SCHOOL_PERIODS sp WHERE sp.SCHOOL_ID='".UserSchool()."' AND sp.SYEAR='".UserSyear()."' AND EXISTS (SELECT '' FROM COURSE_PERIODS WHERE SYEAR=sp.SYEAR AND PERIOD_ID=sp.PERIOD_ID AND (position(',$_REQUEST[table],' IN DOES_ATTENDANCE)>0 OR position('Y' IN cp.DOES_ATTENDANCE)>0 )) ORDER BY sp.SORT_ORDER");
+$QI = DBQuery("SELECT sp.PERIOD_ID,sp.TITLE FROM SCHOOL_PERIODS sp WHERE sp.SCHOOL_ID='".UserSchool()."' AND sp.SYEAR='".UserSyear()."' AND EXISTS (SELECT '' FROM COURSE_PERIODS WHERE SYEAR=sp.SYEAR AND PERIOD_ID=sp.PERIOD_ID AND position(',$_REQUEST[table],' IN DOES_ATTENDANCE)>0) ORDER BY sp.SORT_ORDER");
 $periods_RET = DBGet($QI,array(),array('PERIOD_ID'));
 
 $period_select = "<SELECT name=period onChange='this.form.submit();'><OPTION value=''>">_('All')."</OPTION>";
@@ -29,19 +29,19 @@ foreach($periods_RET as $id=>$period)
 $period_select .= "</SELECT>";
 
 echo "<FORM action=Modules.php?modname=$_REQUEST[modname] method=POST>";
-DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date',false,array('submit'=>true)).' - '.$period_select,$category_select);
+DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)).' - '.$period_select,$category_select);
 echo '</FORM>';
 
-$sql = "SELECT s.STAFF_ID,CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) AS FULL_NAME,sp.TITLE,cp.PERIOD_ID,cp.TITLE AS COURSE_TITLE,
-		(SELECT 'Y' FROM attendance_completed ac WHERE ac.STAFF_ID=cp.TEACHER_ID AND ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.PERIOD_ID=sp.PERIOD_ID AND TABLE_NAME='$_REQUEST[table]') AS COMPLETED
-		FROM staff s,COURSE_PERIODS cp,SCHOOL_PERIODS sp,ATTENDANCE_CALENDAR acc
+$sql = "SELECT s.STAFF_ID,s.LAST_NAME||', '||s.FIRST_NAME AS FULL_NAME,sp.TITLE,cp.PERIOD_ID,cp.TITLE AS COURSE_TITLE,
+		(SELECT 'Y' FROM ATTENDANCE_COMPLETED ac WHERE ac.STAFF_ID=cp.TEACHER_ID AND ac.SCHOOL_DATE=acc.SCHOOL_DATE AND ac.PERIOD_ID=sp.PERIOD_ID AND TABLE_NAME='$_REQUEST[table]') AS COMPLETED
+		FROM STAFF s,COURSE_PERIODS cp,SCHOOL_PERIODS sp,ATTENDANCE_CALENDAR acc
 		WHERE
-			sp.PERIOD_ID = cp.PERIOD_ID AND ( position(',$_REQUEST[table],' IN cp.DOES_ATTENDANCE)>0 OR position('Y' IN cp.DOES_ATTENDANCE)>0 )
-			AND cp.TEACHER_ID=s.STAFF_ID AND cp.MARKING_PERIOD_ID IN (".GetAllMP('QTR',GetCurrentMP('QTR',date("Y-m-d", strtotime($date)))).")
+			sp.PERIOD_ID = cp.PERIOD_ID AND position(',$_REQUEST[table],' IN cp.DOES_ATTENDANCE)>0
+			AND cp.TEACHER_ID=s.STAFF_ID AND cp.MARKING_PERIOD_ID IN (".GetAllMP('QTR',GetCurrentMP('QTR',$date)).")
 			AND cp.SYEAR='".UserSyear()."' AND cp.SCHOOL_ID='".UserSchool()."' AND s.PROFILE='teacher'
 			".(($_REQUEST['period'])?" AND cp.PERIOD_ID='$_REQUEST[period]'":'')." AND acc.CALENDAR_ID=cp.CALENDAR_ID AND acc.SCHOOL_DATE='$date'
 			AND acc.SYEAR='".UserSyear()."' AND (acc.MINUTES IS NOT NULL AND acc.MINUTES>0)
-			AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(DAYOFWEEK(acc.SCHOOL_DATE) AS SIGNED)+1 FOR 1) IN cp.DAYS)>0
+			AND (sp.BLOCK IS NULL AND position(substring('UMTWHFS' FROM cast(extract(DOW FROM acc.SCHOOL_DATE) AS INT)+1 FOR 1) IN cp.DAYS)>0
 			OR sp.BLOCK IS NOT NULL AND acc.BLOCK IS NOT NULL AND sp.BLOCK=acc.BLOCK)
 		ORDER BY FULL_NAME";
 $RET = DBGet(DBQuery($sql),array(),array('STAFF_ID'));

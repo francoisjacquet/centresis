@@ -26,7 +26,7 @@ if(($_REQUEST['month_values'] && $_POST['month_values']) || ($_REQUEST['values']
 
 	$iu_extra['STUDENT_ENROLLMENT'] = "STUDENT_ID='".UserStudentID()."' AND ID='__ID__'";
 	$iu_extra['fields']['STUDENT_ENROLLMENT'] = 'ID,SYEAR,STUDENT_ID,';
-	$iu_extra['values']['STUDENT_ENROLLMENT'] = db_nextval('STUDENT_ENROLLMENT').",'".UserSyear()."','".UserStudentID()."',";
+	$iu_extra['values']['STUDENT_ENROLLMENT'] = "nextval('STUDENT_ENROLLMENT_SEQ'),'".UserSyear()."','".UserStudentID()."',";
 	if(!$new_student)
 		SaveData($iu_extra,'',$field_names);
 }
@@ -57,7 +57,7 @@ if(count($schools_RET))
 		$next_school_options[$school['ID']] = $school['TITLE'];
 }
 
-$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM attendance_calendars WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY DEFAULT_CALENDAR ASC"));
+$calendars_RET = DBGet(DBQuery("SELECT CALENDAR_ID,DEFAULT_CALENDAR,TITLE FROM ATTENDANCE_CALENDARS WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' ORDER BY DEFAULT_CALENDAR ASC"));
 if(count($calendars_RET))
 {
 	foreach($calendars_RET as $calendar)

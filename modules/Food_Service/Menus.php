@@ -32,14 +32,14 @@ if($_REQUEST['modfunc']=='update')
 					if($_REQUEST['tab_id']!='new')
 					{
 						$sql = 'INSERT INTO FOOD_SERVICE_CATEGORIES ';
-						$fields = 'MENU_ID,SCHOOL_ID,';
-						$values = '\''.$_REQUEST['tab_id'].'\',\''.UserSchool().'\',';
+						$fields = 'CATEGORY_ID,MENU_ID,SCHOOL_ID,';
+						$values = db_seq_nextval('FOOD_SERVICE_CATEGORIES_SEQ').',\''.$_REQUEST['tab_id'].'\',\''.UserSchool().'\',';
 					}
 					else
 					{
 						$sql = 'INSERT INTO FOOD_SERVICE_MENUS ';
-						$fields = 'SCHOOL_ID,';
-						$values = '\''.UserSchool().'\',';
+						$fields = 'MENU_ID,SCHOOL_ID,';
+						$values = db_seq_nextval('FOOD_SERVICE_MENUS_SEQ').',\''.UserSchool().'\',';
 					}
 
 					$go = false;

@@ -2,11 +2,10 @@
 echo '<TABLE width=100% border=0 cellpadding=6>';
 echo '<TR>';
 // IMAGE
-if($_REQUEST['student_id']!='new' && $StudentPicturesPath && (($file = @fopen($picture_path=$StudentPicturesPath.UserSyear().'/'.UserStudentID().'.JPG','r')) || ($file = @fopen($picture_path=$StudentPicturesPath.(UserSyear()-1).'/'.UserStudentID().'.JPG','r'))))
-{
-	fclose($file);
+
+$picture_path = ($_REQUEST['student_id']=='new'?'':FindPicture('student', UserStudentID()));
+if (!empty($picture_path))
 	echo '<TD width=150><IMG SRC="'.$picture_path.'" width=150></TD><TD valign=top>';
-}
 else
 	echo '<TD colspan=2>';
 
@@ -17,7 +16,7 @@ if(AllowEdit() && !$_REQUEST['_CENTRE_PDF'])
 	if($_REQUEST['student_id']=='new' || Preferences('HIDDEN')!='Y')
 		echo '<TABLE><TR><TD>'.TextInput($student['FIRST_NAME'],'students[FIRST_NAME]',($student['FIRST_NAME']==''?'<FONT color=red>':'')._('First').($student['FIRST_NAME']==''?'</FONT>':''),'size=12 maxlength=50').'</TD><TD>'.TextInput($student['MIDDLE_NAME'],'students[MIDDLE_NAME]',_('Middle'),'size=3 maxlength=50').'</TD><TD>'.TextInput($student['LAST_NAME'],'students[LAST_NAME]',($student['LAST_NAME']==''?'<FONT color=red>':'')._('Last').($student['LAST_NAME']==''?'</FONT>':''),'size=12 maxlength=50').'</TD><TD>'.SelectInput($student['NAME_SUFFIX'],'students[NAME_SUFFIX]',_('Suffix'),array('Jr'=>'Jr','Sr'=>'Sr','II'=>'II','III'=>'III','IV'=>'IV','V'=>'V'),'').'</TD></TR></TABLE>';
 	else
-		echo '<DIV id=student_name><div onclick=\'addHTML("<TABLE><TR><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['FIRST_NAME']),'students[FIRST_NAME]',_('First'),'maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['MIDDLE_NAME']),'students[MIDDLE_NAME]',_('Middle'),'size=3 maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['LAST_NAME']),'students[LAST_NAME]',_('Last'),'maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',SelectInput($student['NAME_SUFFIX'],'students[NAME_SUFFIX]',_('Suffix'),array('Jr'=>'Jr','Sr'=>'Sr','II'=>'II','III'=>'III','IV'=>'IV','V'=>'V'),'','',false)).'</TD></TR></TABLE>","student_name",true);\'><span style=\'border-bottom-style:dotted;border-bottom-width:1px;border-bottom-color:'.Preferences('TITLES').';\'>'.$student['FIRST_NAME'].' '.$student['MIDDLE_NAME'].' '.$student['LAST_NAME'].' '.$student['NAME_SUFFIX'].'</span></div></DIV><small><FONT color='.Preferences('TITLES').'>'._('Given Name').'</FONT></small>';
+		echo '<DIV id=student_name><div onclick=\'addHTML("<TABLE><TR><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['FIRST_NAME']),'students[FIRST_NAME]',_('First'),'maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['MIDDLE_NAME']),'students[MIDDLE_NAME]',_('Middle'),'size=3 maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',TextInput(str_replace(array("'",'"'),array('&#39;','&rdquo;'),$student['LAST_NAME']),'students[LAST_NAME]',_('Last'),'maxlength=50',false)).'</TD><TD>'.str_replace('"','\"',SelectInput($student['NAME_SUFFIX'],'students[NAME_SUFFIX]',_('Suffix'),array('Jr'=>'Jr','Sr'=>'Sr','II'=>'II','III'=>'III','IV'=>'IV','V'=>'V'),'','',false)).'</TD></TR></TABLE>","student_name",true);\'><span style=\'border-bottom-style:dotted;border-bottom-width:1;border-bottom-color:'.Preferences('TITLES').';\'>'.$student['FIRST_NAME'].' '.$student['MIDDLE_NAME'].' '.$student['LAST_NAME'].' '.$student['NAME_SUFFIX'].'</span></div></DIV><small><FONT color='.Preferences('TITLES').'>'._('Given Name').'</FONT></small>';
 else
 	echo ($student['FIRST_NAME']!=''||$student['MIDDLE_NAME']!=''||$student['LAST_NAME']!=''||$student['NAME_SUFFIX']!=''?$student['FIRST_NAME'].' '.$student['MIDDLE_NAME'].' '.$student['LAST_NAME'].' '.$student['NAME_SUFFIX']:'-').'<BR><small><FONT color='.Preferences('TITLES').'>'._('Given Name').'</FONT></small>';
 echo '</TD>';

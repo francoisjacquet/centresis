@@ -1,6 +1,6 @@
 <?php
 // GET ALL THE CONFIG ITEMS FOR ELIGIBILITY
-$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM program_config WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility'"));
+$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM PROGRAM_CONFIG WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility'"));
 if(count($start_end_RET))
 {
 	foreach($start_end_RET as $value)
@@ -9,29 +9,26 @@ if(count($start_end_RET))
 
 if($_REQUEST['values'])
 {
-	$start_pre = $_REQUEST['values']['START_DAY'].$_REQUEST['values']['START_HOUR'];
-	$end_pre = $_REQUEST['values']['END_DAY'].$_REQUEST['values']['END_HOUR'];
-
 	if($_REQUEST['values']['START_M']=='PM')
-		$start_pre = $_REQUEST['values']['START_DAY'].($_REQUEST['values']['START_HOUR']+=12);
+		$_REQUEST['values']['START_HOUR']+=12;
 	if($_REQUEST['values']['END_M']=='PM')
-		$end_pre = $_REQUEST['values']['END_DAY'].($_REQUEST['values']['END_HOUR']+=12);
+		$_REQUEST['values']['END_HOUR']+=12;
 
-	$start = $start_pre.$_REQUEST['values']['START_MINUTE'];
-	$end = $start_pre.$_REQUEST['values']['END_HOUR'].$_REQUEST['values']['END_MINUTE'];
+	$start = $_REQUEST['values']['START_DAY'].$_REQUEST['values']['START_HOUR'].$_REQUEST['values']['START_MINUTE'];
+	$end = $_REQUEST['values']['END_DAY'].$_REQUEST['values']['END_HOUR'].$_REQUEST['values']['END_MINUTE'];
 
 	if($start<=$end)
 	{
 		foreach($_REQUEST['values'] as $key=>$value)
 		{
 			if(isset($$key))
-				DBQuery("UPDATE program_config SET VALUE='$value' WHERE PROGRAM='eligibility' AND TITLE='$key' AND SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'");
+				DBQuery("UPDATE PROGRAM_CONFIG SET VALUE='$value' WHERE PROGRAM='eligibility' AND TITLE='$key' AND SCHOOL_ID='".UserSchool()."' AND SYEAR='".UserSyear()."'");
 			else
 				DBQuery("INSERT INTO PROGRAM_CONFIG (SYEAR,SCHOOL_ID,PROGRAM,TITLE,VALUE) values('".UserSyear()."','".UserSchool()."','eligibility','$key','$value')");
 		}
 	}
 
-	$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM program_config WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility'"));
+	$start_end_RET = DBGet(DBQuery("SELECT TITLE,VALUE FROM PROGRAM_CONFIG WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND PROGRAM='eligibility'"));
 	if(count($start_end_RET))
 	{
 		foreach($start_end_RET as $value)

@@ -10,7 +10,7 @@ if($_REQUEST['modfunc']=='save')
 			if(!$current_RET[$student_id])
 			{
 				$sql = "INSERT INTO SCHEDULE_REQUESTS (REQUEST_ID,SYEAR,SCHOOL_ID,STUDENT_ID,SUBJECT_ID,COURSE_ID,MARKING_PERIOD_ID,WITH_TEACHER_ID,NOT_TEACHER_ID,WITH_PERIOD_ID,NOT_PERIOD_ID)
-							values(".db_nextval('SCHEDULE_REQUESTS').",'".UserSyear()."','".UserSchool()."','".$student_id."','".$_SESSION['MassRequests.php']['subject_id']."','".$_SESSION['MassRequests.php']['course_id']."',NULL,'".$_REQUEST['with_teacher_id']."','".$_REQUEST['without_teacher_id']."','".$_REQUEST['with_period_id']."','".$_REQUEST['without_period_id']."')";
+							values(".db_seq_nextval('SCHEDULE_REQUESTS_SEQ').",'".UserSyear()."','".UserSchool()."','".$student_id."','".$_SESSION['MassRequests.php']['subject_id']."','".$_SESSION['MassRequests.php']['course_id']."',NULL,'".$_REQUEST['with_teacher_id']."','".$_REQUEST['without_teacher_id']."','".$_REQUEST['with_period_id']."','".$_REQUEST['without_period_id']."')";
 				DBQuery($sql);
 			}
 		}
@@ -40,7 +40,7 @@ if($_REQUEST['modfunc']!='choose_course')
 		echo '</DIV>'."<A HREF=# onclick='window.open(\"Modules.php?modname=$_REQUEST[modname]&modfunc=choose_course\",\"\",\"scrollbars=yes,resizable=yes,width=800,height=400\");'>"._("Choose a Course")."</A></TD></TR>";
 		echo '<TR><TD align=right valign=top>'._('With').'</TD><TD>';
 		echo '<BR><TABLE><TR><TD align=right>'._('Teacher').'</TD><TD><SELECT name=with_teacher_id><OPTION value="">'._('N/A').'</OPTION>';
-		$teachers_RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME,FIRST_NAME,MIDDLE_NAME FROM staff WHERE SCHOOLS LIKE '%,".UserSchool().",%' AND SYEAR='".UserSyear()."' AND PROFILE='teacher' ORDER BY LAST_NAME,FIRST_NAME"));
+		$teachers_RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME,FIRST_NAME,MIDDLE_NAME FROM STAFF WHERE SCHOOLS LIKE '%,".UserSchool().",%' AND SYEAR='".UserSyear()."' AND PROFILE='teacher' ORDER BY LAST_NAME,FIRST_NAME"));
 		foreach($teachers_RET as $teacher)
 			echo '<OPTION value='.$teacher['STAFF_ID'].'>'.$teacher['LAST_NAME'].', '.$teacher['FIRST_NAME'].' '.$teacher['MIDDLE_NAME'].'</OPTION>';
 		echo '</SELECT></TD></TR><TR><TD align=right>'._('Period').'</TD><TD><SELECT name=with_period_id><OPTION value="">'._('N/A').'</OPTION>';
@@ -85,29 +85,14 @@ if(!$_REQUEST['modfunc'])
 
 if($_REQUEST['modfunc']=='choose_course')
 {
-if(!$_REQUEST['course_period_id'])
-		include 'modules/Scheduling/Courses.php';
-	else
-	{
+
 		$_SESSION['MassRequests.php']['subject_id'] = $_REQUEST['subject_id'];
 		$_SESSION['MassRequests.php']['course_id'] = $_REQUEST['course_id'];
-		$_SESSION['MassRequests.php']['course_period_id'] = $_REQUEST['course_period_id'];
-
-		$course_title = DBGet(DBQuery("SELECT TITLE FROM COURSES WHERE COURSE_ID='".$_SESSION['MassRequests.php']['course_id']."'"));
-		$course_title = $course_title[1]['TITLE'];
-		$period_title = DBGet(DBQuery("SELECT TITLE FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".$_SESSION['MassRequests.php']['course_period_id']."'"));
-		$period_title = $period_title[1]['TITLE'];
-
-		echo "<script language=javascript>opener.document.getElementById(\"course_div\").innerHTML = \"$course_title<BR>$period_title\"; window.close();</script>";
-	}
-
-		/*$_SESSION['MassRequests.php']['subject_id'] = $_REQUEST['subject_id'];
-		$_SESSION['MassRequests.php']['course_id'] = $_REQUEST['course_id'];
 
 		$course_title = DBGet(DBQuery("SELECT TITLE FROM COURSES WHERE COURSE_ID='".$_SESSION['MassRequests.php']['course_id']."'"));
 		$course_title = $course_title[1]['TITLE'];
 
-		echo "<script language=javascript>opener.document.getElementById(\"course_div\").innerHTML = \"$course_title\"; window.close();</script>";*/
+		echo "<script language=javascript>opener.document.getElementById(\"course_div\").innerHTML = \"$course_title\"; window.close();</script>";
 }
 
 function _makeChooseCheckbox($value,$title)

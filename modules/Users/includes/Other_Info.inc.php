@@ -1,11 +1,11 @@
 <?php
 include_once('modules/Users/includes/functions.php');
-$category_RET = DBGet(DBQuery("SELECT COLUMNS FROM staff_FIELD_CATEGORIES WHERE ID='$_REQUEST[category_id]'"));
-$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS,DEFAULT_SELECTION,REQUIRED FROM staff_FIELDS WHERE CATEGORY_ID='$_REQUEST[category_id]' ORDER BY SORT_ORDER,TITLE"));
+$category_RET = DBGet(DBQuery("SELECT COLUMNS FROM STAFF_FIELD_CATEGORIES WHERE ID='$_REQUEST[category_id]'"));
+$fields_RET = DBGet(DBQuery("SELECT ID,TITLE,TYPE,SELECT_OPTIONS,DEFAULT_SELECTION,REQUIRED FROM STAFF_FIELDS WHERE CATEGORY_ID='$_REQUEST[category_id]' ORDER BY SORT_ORDER,TITLE"));
 
 if(UserStaffID())
 {
-	$custom_RET = DBGet(DBQuery("SELECT * FROM staff WHERE STAFF_ID='".UserStaffID()."'"));
+	$custom_RET = DBGet(DBQuery("SELECT * FROM STAFF WHERE STAFF_ID='".UserStaffID()."'"));
 	$value = $custom_RET[1];
 }
 

@@ -1,18 +1,18 @@
 <?php
 
 if($_REQUEST['day_start'] && $_REQUEST['month_start'] && $_REQUEST['year_start'])
-	while(!VerifyDate($start_date = $_REQUEST['year_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['day_start']))
+	while(!VerifyDate($start_date = $_REQUEST['day_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['year_start']))
 		$_REQUEST['day_start']--;
 else
 {
 	$_REQUEST['day_start'] = '01';
-	$_REQUEST['month_start'] = strtoupper(date('m'));
-	$_REQUEST['year_start'] = date('Y');
-	$start_date = $_REQUEST['year_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['day_start'];
+	$_REQUEST['month_start'] = strtoupper(date('M'));
+	$_REQUEST['year_start'] = date('y');
+	$start_date = $_REQUEST['day_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['year_start'];
 }
 
 if($_REQUEST['day_end'] && $_REQUEST['month_end'] && $_REQUEST['year_end'])
-	while(!VerifyDate($end_date = $_REQUEST['year_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['day_end']))
+	while(!VerifyDate($end_date = $_REQUEST['day_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['year_end']))
 		$_REQUEST['day_end']--;
 else
 {
@@ -44,12 +44,12 @@ $types_columns = array('CASH'=>_('Cash'),'CHECK'=>_('Check'),'CREDIT CARD'=>_('C
 
 $PHP_tmp_SELF = PreparePHP_SELF();
 echo "<FORM action=$PHP_tmp_SELF method=POST>";
-DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($start_date))),'_start').' - '.PrepareDate(strtoupper(date("Y-m-d",strtotime($end_date))),'_end').' : <INPUT type=submit value="'>_('Go').'">');
+DrawHeader(PrepareDate($start_date,'_start').' - '.PrepareDate($end_date,'_end').' : <INPUT type=submit value="'._('Go').'">');
 echo '</FORM>';
 
-$RET = DBGet(DBQuery("SELECT 'Student' AS TYPE,fst.SHORT_NAME,fsti.SHORT_NAME AS ITEM_SHORT_NAME,sum(fsti.AMOUNT) AS AMOUNT FROM       FOOD_SERVICE_TRANSACTION_ITEMS fsti,      FOOD_SERVICE_TRANSACTIONS fst WHERE fst.SHORT_NAME NOT IN (SELECT TITLE FROM FOOD_SERVICE_MENUS WHERE SCHOOL_ID='".UserSchool()."') AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.SYEAR='".UserSyear()."' AND fst.SCHOOL_ID='".UserSchool()."' AND fst.TIMESTAMP BETWEEN '".date("Y-m-d",strtotime($start_date))."' AND date '".date("Y-m-d",strtotime('+1 day', strtotime($end_date)))."' GROUP BY fst.SHORT_NAME,fsti.SHORT_NAME"),array('ITEM_SHORT_NAME'=>'bump_amount'));
+$RET = DBGet(DBQuery("SELECT 'Student' AS TYPE,fst.SHORT_NAME,fsti.SHORT_NAME AS ITEM_SHORT_NAME,sum(fsti.AMOUNT) AS AMOUNT FROM       FOOD_SERVICE_TRANSACTION_ITEMS fsti,      FOOD_SERVICE_TRANSACTIONS fst WHERE fst.SHORT_NAME NOT IN (SELECT TITLE FROM FOOD_SERVICE_MENUS WHERE SCHOOL_ID='".UserSchool()."') AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.SYEAR='".UserSyear()."' AND fst.SCHOOL_ID='".UserSchool()."' AND fst.TIMESTAMP BETWEEN '".$start_date."' AND date '".$end_date."' +1 GROUP BY fst.SHORT_NAME,fsti.SHORT_NAME"),array('ITEM_SHORT_NAME'=>'bump_amount'));
 //echo '<pre>'; var_dump($RET); echo '</pre>';
-$RET = DBGet(DBQuery("SELECT 'User'    AS TYPE,fst.SHORT_NAME,fsti.SHORT_NAME AS ITEM_SHORT_NAME,sum(fsti.AMOUNT) AS AMOUNT FROM FOOD_SERVICE_STAFF_TRANSACTION_ITEMS fsti,FOOD_SERVICE_STAFF_TRANSACTIONS fst WHERE fst.SHORT_NAME NOT IN (SELECT TITLE FROM FOOD_SERVICE_MENUS WHERE SCHOOL_ID='".UserSchool()."') AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.SYEAR='".UserSyear()."' AND fst.SCHOOL_ID='".UserSchool()."' AND fst.TIMESTAMP BETWEEN '".date("Y-m-d",strtotime($start_date))."' AND date '".date("Y-m-d",strtotime('+1 day', strtotime($end_date)))."' GROUP BY fst.SHORT_NAME,fsti.SHORT_NAME"),array('ITEM_SHORT_NAME'=>'bump_amount'));
+$RET = DBGet(DBQuery("SELECT 'User'    AS TYPE,fst.SHORT_NAME,fsti.SHORT_NAME AS ITEM_SHORT_NAME,sum(fsti.AMOUNT) AS AMOUNT FROM FOOD_SERVICE_STAFF_TRANSACTION_ITEMS fsti,FOOD_SERVICE_STAFF_TRANSACTIONS fst WHERE fst.SHORT_NAME NOT IN (SELECT TITLE FROM FOOD_SERVICE_MENUS WHERE SCHOOL_ID='".UserSchool()."') AND fsti.TRANSACTION_ID=fst.TRANSACTION_ID AND fst.SYEAR='".UserSyear()."' AND fst.SCHOOL_ID='".UserSchool()."' AND fst.TIMESTAMP BETWEEN '".$start_date."' AND date '".$end_date."' +1 GROUP BY fst.SHORT_NAME,fsti.SHORT_NAME"),array('ITEM_SHORT_NAME'=>'bump_amount'));
 //echo '<pre>'; var_dump($RET); echo '</pre>';
 
 $LO_types = array(0=>array());

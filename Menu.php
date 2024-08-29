@@ -31,6 +31,8 @@ if(!$_CENTRE['Menu'])
 			else
 				$_CENTRE['Menu'][$modcat][$program] = $title;
 		}
+        // Set the default search page
+        $_CENTRE['MenuSearch'][$modcat] = ($menusearch[$modcat]?$menusearch[$modcat]:$modcat.'/Search.php');
 	}
 
 	if(User('PROFILE')=='student')

@@ -7,7 +7,7 @@ if($_REQUEST['modfunc']=='save')
 {
 	if($_SESSION['MassSchedule.php'])
 	{
-		$start_date = $_REQUEST['year'].'-'.$_REQUEST['month'].'-'.$_REQUEST['day'];
+		$start_date = $_REQUEST['day'].'-'.$_REQUEST['month'].'-'.$_REQUEST['year'];
 		if(!VerifyDate($start_date))
 			BackPrompt('The date you entered is not valid');
 		$course_mp = DBGet(DBQuery("SELECT MARKING_PERIOD_ID FROM COURSE_PERIODS WHERE COURSE_PERIOD_ID='".$_SESSION['MassSchedule.php']['course_period_id']."'"));

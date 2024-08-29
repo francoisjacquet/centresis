@@ -52,7 +52,7 @@ if($_REQUEST['delete']=='true')
                                                                     $val4 = $val_sdt;
                                                                     if($val1 == $iii){
                                                                                 //echo "$val1 - $val2 - $val3 - $val4 ||| ";
-                                                                                DBQuery("DELETE FROM attendance_period WHERE STUDENT_ID='".$val2."' AND SCHOOL_DATE='".$val4."' AND COURSE_PERIOD_ID='".$val3."'");
+                                                                                DBQuery("DELETE FROM ATTENDANCE_PERIOD WHERE STUDENT_ID='".$val2."' AND SCHOOL_DATE='".$val4."' AND COURSE_PERIOD_ID='".$val3."'");
                                                                     }
                                                                     $iii++;
                                                             }
@@ -75,7 +75,7 @@ if($_REQUEST['delete']=='true')
 
                 DrawHeader(ProgramTitle());
                 echo "<TABLE width=100% border=0 cellpadding=0 cellspacing=0><TR>";
-                echo "<TD bgcolor=#FFFFFF style=border-bottom:1px dotted #767676; align=left> &nbsp;";
+                echo "<TD bgcolor=#FFFFFF style=border:1;border-style: none none solid none; align=left> &nbsp;";
                 echo "<font color=#000000><FONT size=-1><IMG SRC=assets/check.gif>";
                 echo _('The duplicate records have been deleted.');
                 echo "</FONT></font></TD></TR></TABLE><BR>";

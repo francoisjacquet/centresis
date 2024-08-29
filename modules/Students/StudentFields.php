@@ -30,11 +30,10 @@ if($_REQUEST['tables'] && $_POST['tables'])
 					$_REQUEST['category_id'] = $columns['CATEGORY_ID'];
 					unset($columns['CATEGORY_ID']);
 				}
-
-				//$id = DBGet(DBQuery("SELECT ".db_nextval('CUSTOM').' AS ID '.FROM_DUAL));
-				$id = db_nextval('custom_fields');
-				$fields = "CATEGORY_ID,";
-				$values = "'".$_REQUEST['category_id']."',";
+				$id = DBGet(DBQuery("SELECT ".db_seq_nextval('CUSTOM_SEQ').' AS ID '.FROM_DUAL));
+				$id = $id[1]['ID'];
+				$fields = "\"table\",ID,CATEGORY_ID,";
+				$values = "'students',".$id.",'".$_REQUEST['category_id']."',";
 				$_REQUEST['id'] = $id;
 
 				switch($columns['TYPE'])
@@ -72,17 +71,13 @@ if($_REQUEST['tables'] && $_POST['tables'])
 					break;
 				}
 				DBQuery("CREATE INDEX CUSTOM_IND$id ON STUDENTS (CUSTOM_$id)");
-				DBQuery("INSERT INTO CUSTOM (student_id) VALUES (NULL)");
 			}
 			elseif($table=='STUDENT_FIELD_CATEGORIES')
 			{
-				//$id = DBGet(DBQuery("SELECT ".db_nextval('STUDENT_FIELD_CATEGORIES').' AS ID '.FROM_DUAL));
-				//$id = $id[1]['ID'];
-				$id = db_nextval('STUDENT_FIELD_CATEGORIES');
-//				$fields = "ID,";
-//				$values = $id.",";
-				$fields = "";
-				$values = "";
+				$id = DBGet(DBQuery("SELECT ".db_seq_nextval('STUDENT_FIELD_CATEGORIES_SEQ').' AS ID '.FROM_DUAL));
+				$id = $id[1]['ID'];
+				$fields = "ID,";
+				$values = $id.",";
 				$_REQUEST['category_id'] = $id;
 				// add to profile or permissions of user creating it
 				if(User('PROFILE_ID'))
@@ -128,10 +123,10 @@ if($_REQUEST['modfunc']=='delete')
 	{
 		if(DeletePrompt('student field category and all fields in the category'))
 		{
-			$fields = DBGet(DBQuery("SELECT ID FROM CUSTOM_FIELDS WHERE CATEGORY_ID='$_REQUEST[category_id]'"));
+			$fields = DBGet(DBQuery("SELECT ID FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND CATEGORY_ID='$_REQUEST[category_id]'"));
 			foreach($fields as $field)
 			{
-				DBQuery("DELETE FROM CUSTOM_FIELDS WHERE ID='$field[ID]'");
+				DBQuery("DELETE FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND ID='$field[ID]'");
 				DBQuery("ALTER TABLE STUDENTS DROP COLUMN CUSTOM_$field[ID]");
 			}
 			DBQuery("DELETE FROM STUDENT_FIELD_CATEGORIES WHERE ID='$_REQUEST[category_id]'");
@@ -157,7 +152,7 @@ if(!$_REQUEST['modfunc'])
 	// ADDING & EDITING FORM
 	if($_REQUEST['id'] && $_REQUEST['id']!='new')
 	{
-		$sql = "SELECT CATEGORY_ID,TITLE,TYPE,SELECT_OPTIONS,DEFAULT_SELECTION,SORT_ORDER,REQUIRED,REQUIRED,(SELECT TITLE FROM STUDENT_FIELD_CATEGORIES WHERE ID=CATEGORY_ID) AS CATEGORY_TITLE FROM CUSTOM_FIELDS WHERE ID='$_REQUEST[id]'";
+		$sql = "SELECT CATEGORY_ID,TITLE,TYPE,SELECT_OPTIONS,DEFAULT_SELECTION,SORT_ORDER,REQUIRED,REQUIRED,(SELECT TITLE FROM STUDENT_FIELD_CATEGORIES WHERE ID=CATEGORY_ID) AS CATEGORY_TITLE FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND ID='$_REQUEST[id]'";
 		$RET = DBGet(DBQuery($sql));
 		$RET = $RET[1];
 		$title = ParseMLField($RET['CATEGORY_TITLE']).' - '.ParseMLField($RET['TITLE']);
@@ -296,7 +291,7 @@ if(!$_REQUEST['modfunc'])
 	// FIELDS
 	if($_REQUEST['category_id'] && $_REQUEST['category_id']!='new' && count($categories_RET))
 	{
-		$sql = "SELECT ID,TITLE,TYPE,SORT_ORDER FROM CUSTOM_FIELDS WHERE CATEGORY_ID='".$_REQUEST['category_id']."' ORDER BY SORT_ORDER,TITLE";
+		$sql = "SELECT ID,TITLE,TYPE,SORT_ORDER FROM CUSTOM_FIELDS WHERE CUSTOM_FIELDS.TABLE='students' AND CATEGORY_ID='".$_REQUEST['category_id']."' ORDER BY SORT_ORDER,TITLE";
 		$fields_RET = DBGet(DBQuery($sql),array('TYPE'=>'_makeType'));
 
 		if(count($fields_RET))

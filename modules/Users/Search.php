@@ -7,7 +7,7 @@
 
 $modcat = 'Users';
 $_REQUEST['modname'] = '';
-if(AllowUse('Users/User.php'))
+if(AllowUse('Users/User.php') && !User('PERSON_ID'))
 {
 	$_REQUEST['modname'] = $_REQUEST['next_modname'] = 'Users/User.php';
 }

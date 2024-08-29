@@ -39,17 +39,17 @@ if($course_RET[1]['CALENDAR_ID'])
 	$calendar_id = $course_RET[1]['CALENDAR_ID'];
 else
 {
-	$calendar_id = DBGet(DBQuery("SELECT CALENDAR_ID FROM attendance_calendars WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND DEFAULT_CALENDAR='Y'"));
+	$calendar_id = DBGet(DBQuery("SELECT CALENDAR_ID FROM ATTENDANCE_CALENDARS WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND DEFAULT_CALENDAR='Y'"));
 	$calendar_id = $calendar_id['CALENDAR_ID'];
 }
 
-$calendar_RET = DBGet(DBQuery("SELECT MINUTES FROM attendance_calendar WHERE CALENDAR_ID='$calendar_id' AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND SCHOOL_DATE='$date'"));
+$calendar_RET = DBGet(DBQuery("SELECT MINUTES FROM ATTENDANCE_CALENDAR WHERE CALENDAR_ID='$calendar_id' AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."' AND SCHOOL_DATE='$date'"));
 //echo '<pre>'; var_dump($calendar_RET); echo '</pre>';
 
 if(!$calendar_RET[1]['MINUTES'])
 {
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&menu_id=$_REQUEST[menu_id] method=POST>";
-	DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date',false,array('submit'=>true)));
+	DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)));
 	echo '</FORM>';
 	ErrorMessage(array('<IMG SRC=assets/x.gif>'._('The selected date is not a school day!')),'fatal');
 }
@@ -57,7 +57,7 @@ if(!$calendar_RET[1]['MINUTES'])
 if(GetCurrentMP($course_RET[1]['MP'],$date)!=$course_RET[1]['MARKING_PERIOD_ID'])
 {
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&menu_id=$_REQUEST[menu_id] method=POST>";
-	DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date',false,array('submit'=>true)));
+	DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)));
 	echo '</FORM>';
 	ErrorMessage(array('<IMG SRC=assets/x.gif>'._('This period does not meet in the marking period of the selected date.')),'fatal');
 }
@@ -82,7 +82,7 @@ switch($day)
 if(strpos($days,$day)===false)
 {
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&table=$_REQUEST[table] method=POST>";
-	DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date',false,array('submit'=>true)));
+	DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)));
 	echo '</FORM>';
 	ErrorMessage(array('<IMG SRC=assets/x.gif>'._('This period does not meet on the selected date.')),'fatal');
 }
@@ -90,7 +90,7 @@ if(strpos($days,$day)===false)
 // if running as a teacher program then centre[allow_edit] will already be set according to admin permissions
 if(!isset($_CENTRE['allow_edit']))
 {
-	$time = strtotime(DBDate('mysql'));
+	$time = strtotime(DBDate('postgres'));
 	if(GetMP($qtr_id,'POST_START_DATE') && ($time<=strtotime(GetMP($qtr_id,'POST_END_DATE'))))
 		$_CENTRE['allow_edit'] = true;
 }
@@ -127,10 +127,10 @@ if($completed[1]['COMPLETED'])
 	$note = ErrorMessage(array('<IMG SRC=assets/check.gif>'._('You have taken lunch counts today for this period.')),'note');
 
 echo "<FORM action=Modules.php?modname=$_REQUEST[modname] method=POST>";
-DrawHeader(PrepareDate(strtoupper(date("Y-m-d",strtotime($date))),'_date',false,array('submit'=>true)).$date_note,SubmitButton('Save'));
+DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)).$date_note,SubmitButton('Save'));
 DrawHeader($note);
 
-$meal_RET = DBGet(DBQuery('SELECT DESCRIPTION FROM calendar_events WHERE SYEAR='.UserSyear().' AND SCHOOL_ID='.UserSchool().' AND SCHOOL_DATE=\''.$date.'\' AND TITLE=\''.$menus_RET[$_REQUEST['menu_id']][1]['TITLE'].'\''));
+$meal_RET = DBGet(DBQuery('SELECT DESCRIPTION FROM CALENDAR_EVENTS WHERE SYEAR='.UserSyear().' AND SCHOOL_ID='.UserSchool().' AND SCHOOL_DATE=\''.$date.'\' AND TITLE=\''.$menus_RET[$_REQUEST['menu_id']][1]['TITLE'].'\''));
 
 if($meal_RET)
 {
@@ -165,6 +165,9 @@ ListOutput($items_RET,$LO_columns,$singular,$plural,false,false,$extra);
 echo '<CENTER>'.SubmitButton(_('Save')).'</CENTRE>';
 echo '</TD><TD width=50%>';
 
+$extra['SELECT'] .= ',fsa.BALANCE,fssa.STATUS';
+$extra['FROM'] .= ',FOOD_SERVICE_ACCOUNTS fsa,FOOD_SERVICE_STUDENT_ACCOUNTS fssa';
+$extra['WHERE'] .= ' AND fssa.STUDENT_ID=s.STUDENT_ID AND fsa.ACCOUNT_ID=fssa.ACCOUNT_ID AND fssa.STATUS IS NOT NULL';
 if(!$extra['functions'])
 	$extra['functions'] = array();
 $extra['functions'] += array('BALANCE'=>'red');

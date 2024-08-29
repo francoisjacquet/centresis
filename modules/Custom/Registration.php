@@ -2,7 +2,7 @@
 if(!UserStudentID())
 {
 	$_SESSION['UserSyear'] = Config('SYEAR');
-	$RET = DBGet(DBQuery("SELECT sju.STUDENT_ID,CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) AS FULL_NAME,se.SCHOOL_ID FROM STUDENTS s,STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE s.STUDENT_ID=sju.STUDENT_ID AND sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=".UserSyear()." AND se.STUDENT_ID=sju.STUDENT_ID AND (('".DBDate()."' BETWEEN se.START_DATE AND se.END_DATE OR se.END_DATE IS NULL) AND '".DBDate()."'>=se.START_DATE)"));
+	$RET = DBGet(DBQuery("SELECT sju.STUDENT_ID,s.LAST_NAME||', '||s.FIRST_NAME AS FULL_NAME,se.SCHOOL_ID FROM STUDENTS s,STUDENTS_JOIN_USERS sju, STUDENT_ENROLLMENT se WHERE s.STUDENT_ID=sju.STUDENT_ID AND sju.STAFF_ID='".User('STAFF_ID')."' AND se.SYEAR=".UserSyear()." AND se.STUDENT_ID=sju.STUDENT_ID AND (('".DBDate()."' BETWEEN se.START_DATE AND se.END_DATE OR se.END_DATE IS NULL) AND '".DBDate()."'>=se.START_DATE)"));
 	$_SESSION['student_id'] = $RET[1]['STUDENT_ID'];
 }
 
@@ -22,17 +22,14 @@ if($_REQUEST['values'])
 		{
 			if($columns['ADDRESS'] && !$inserted_addresses[ereg_replace('[^0-9A-Za-z]+','',strtolower($columns['ADDRESS']))])
 			{
-				//$address_RET = DBGet(DBQuery("SELECT ".db_nextval('ADDRESS').' AS ADDRESS_ID '.FROM_DUAL));
-				//$address_id[$key] = $address_RET[1]['ADDRESS_ID'];
-				$address_id[$key] = db_nextval('ADDRESS');
+				$address_RET = DBGet(DBQuery("SELECT ".db_seq_nextval('ADDRESS_SEQ').' AS ADDRESS_ID '.FROM_DUAL));
+				$address_id[$key] = $address_RET[1]['ADDRESS_ID'];
 				if($key==1)
 					$address_id[2] = $address_RET[1]['ADDRESS_ID'];
 				$sql = "INSERT INTO ADDRESS ";
 
-//				$fields = 'ADDRESS_ID,';
-//				$values = $address_id[$key].',';
-				$fields = '';
-				$values = '';
+				$fields = 'ADDRESS_ID,';
+				$values = $address_id[$key].',';
 
 				if($columns['ADDRESS'])
 					$columns += PrepareAddress($columns['ADDRESS']);
@@ -54,7 +51,7 @@ if($_REQUEST['values'])
 				if($go)
 				{
 					DBQuery($sql);
-					DBQuery("INSERT INTO STUDENTS_JOIN_ADDRESS (ID,STUDENT_ID,ADDRESS_ID) values(".db_nextval('STUDENTS_JOIN_ADDRESS').",'".UserStudentID()."','".$address_id[$key]."')");
+					DBQuery("INSERT INTO STUDENTS_JOIN_ADDRESS (ID,STUDENT_ID,ADDRESS_ID) values(".db_seq_nextval('STUDENTS_JOIN_ADDRESS_SEQ').",'".UserStudentID()."','".$address_id[$key]."')");
 				}
 				$inserted_addresses[ereg_replace('[^0-9A-Za-z]+','',strtolower($columns['ADDRESS']))] = $address_id[$key];
 			}
@@ -69,10 +66,8 @@ if($_REQUEST['values'])
 		{
 			if($person['FIRST_NAME'] && $person['LAST_NAME'])
 			{
-				//$person_id = DBGet(DBQuery("SELECT ".db_nextval('PEOPLE').' AS PERSON_ID '.FROM_DUAL));
-				//$person_id = $person_id[1]['PERSON_ID'];
-				
-				$person_id = db_nextval('PEOPLE');
+				$person_id = DBGet(DBQuery("SELECT ".db_seq_nextval('PEOPLE_SEQ').' AS PERSON_ID '.FROM_DUAL));
+				$person_id = $person_id[1]['PERSON_ID'];
 
 				if($key==1 || $key==2)
 					$person['extra']['Relation'] = 'Parent';
@@ -86,7 +81,7 @@ if($_REQUEST['values'])
 						$value = str_replace("\'","''",$value);
 						$sql = "INSERT INTO PEOPLE_JOIN_CONTACTS ";
 						$fields = 'ID,PERSON_ID,TITLE,VALUE,';
-						$values = db_nextval('PEOPLE').",'".$person_id."','$column','$value',";
+						$values = db_seq_nextval('PEOPLE_SEQ').",'".$person_id."','$column','$value',";
 						$sql .= '(' . substr($fields,0,-1) . ') values(' . substr($values,0,-1) . ')';
 						DBQuery($sql);
 					}
@@ -113,11 +108,11 @@ if($_REQUEST['values'])
 				{
 					DBQuery($sql);
 					if($key==1 || $key==2)
-						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID,CUSTODY) values(".db_nextval('STUDENTS_JOIN_PEOPLE').",'".UserStudentID()."','".$person_id."','".$address_id[$key]."','Y')");
+						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID,CUSTODY) values(".db_seq_nextval('STUDENTS_JOIN_PEOPLE_SEQ').",'".UserStudentID()."','".$person_id."','".$address_id[$key]."','Y')");
 					elseif($address_id[$key])
-						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID) values(".db_nextval('STUDENTS_JOIN_PEOPLE').",'".UserStudentID()."','".$person_id."','".$address_id[$key]."')");
+						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID) values(".db_seq_nextval('STUDENTS_JOIN_PEOPLE_SEQ').",'".UserStudentID()."','".$person_id."','".$address_id[$key]."')");
 					else
-						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID,EMERGENCY) values(".db_nextval('STUDENTS_JOIN_PEOPLE').",'".UserStudentID()."','".$person_id."','".$address_id[1]."','Y')");
+						DBQuery("INSERT INTO STUDENTS_JOIN_PEOPLE (ID,STUDENT_ID,PERSON_ID,ADDRESS_ID,EMERGENCY) values(".db_seq_nextval('STUDENTS_JOIN_PEOPLE_SEQ').",'".UserStudentID()."','".$person_id."','".$address_id[1]."','Y')");
 				}
 			}
 		}

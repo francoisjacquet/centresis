@@ -8,6 +8,8 @@ $does_letter_percent = 0;
 $hide_non_attendance_comment = false;
 // length to truncate comments in the add comment pull-down, set to 0 for no truncate
 $commentsB_len = 20;
+// length to truncate free-text comments in the add comment pull-down, set to 0 for default
+$comments_len = 0;
 // set to true to force allow_edit for teachers
 // note admins will still follow their permissions/profile setting
 // note this is mostly for testing but could be useful if for some reason teachers needed to edit grades after grading ended

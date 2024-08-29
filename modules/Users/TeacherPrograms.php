@@ -3,7 +3,7 @@ DrawHeader(_('Teacher Programs').' - '._(ProgramTitle()));
 
 if(UserStaffID())
 {
-	$profile = DBGet(DBQuery("SELECT PROFILE FROM staff WHERE STAFF_ID='".UserStaffID()."'"));
+	$profile = DBGet(DBQuery("SELECT PROFILE FROM STAFF WHERE STAFF_ID='".UserStaffID()."'"));
 	if($profile[1]['PROFILE']!='teacher')
 	{
 		unset($_SESSION['staff_id']);
@@ -17,10 +17,8 @@ Search('staff_id',$extra);
 if(UserStaffID())
 {
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname] method=POST>";
-	$QI = DBQuery("SELECT cp.PERIOD_ID,cp.COURSE_PERIOD_ID,sp.TITLE,sp.SHORT_NAME,cp.MARKING_PERIOD_ID,cp.DAYS,c.TITLE AS COURSE_TITLE FROM COURSE_PERIODS cp,SCHOOL_PERIODS sp,COURSES c WHERE c.COURSE_ID=cp.COURSE_ID AND cp.PERIOD_ID=sp.PERIOD_ID AND cp.SYEAR='".UserSyear()."' AND cp.SCHOOL_ID='".UserSchool()."' AND cp.TEACHER_ID='".UserStaffID()."' AND cp.MARKING_PERIOD_ID IN (".GetAllMP('QTR',UserMP()).") ORDER BY sp.SORT_ORDER");
+	$QI = DBQuery("SELECT cp.PERIOD_ID,cp.COURSE_PERIOD_ID,sp.TITLE,sp.SHORT_NAME,cp.MARKING_PERIOD_ID,cp.DAYS,c.TITLE AS COURSE_TITLE,cp.SHORT_NAME as CP_SHORT_NAME FROM COURSE_PERIODS cp,SCHOOL_PERIODS sp,COURSES c WHERE c.COURSE_ID=cp.COURSE_ID AND cp.PERIOD_ID=sp.PERIOD_ID AND cp.SYEAR='".UserSyear()."' AND cp.SCHOOL_ID='".UserSchool()."' AND cp.TEACHER_ID='".UserStaffID()."' AND cp.MARKING_PERIOD_ID IN (".GetAllMP('QTR',UserMP()).") ORDER BY sp.SORT_ORDER");
 	$RET = DBGet($QI);
-	// get the fy marking period id, there should be exactly one fy marking period
-	$fy_RET = DBGet(DBQuery("SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='FY' AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
 
 	if($_REQUEST['period'])
 		$_SESSION['UserCoursePeriod'] = $_REQUEST['period'];
@@ -42,7 +40,7 @@ if(UserStaffID())
 		else
 			$selected = '';
 
-		$period_select .= "<OPTION value=$period[COURSE_PERIOD_ID]$selected>".$period['SHORT_NAME'].($period['MARKING_PERIOD_ID']!=$fy_RET[1]['MARKING_PERIOD_ID']?' '.GetMP($period['MARKING_PERIOD_ID'],'SHORT_NAME'):'').(strlen($period['DAYS'])<5?' '.$period['DAYS']:'').' - '.$period['COURSE_TITLE']."</OPTION>";
+		$period_select .= "<OPTION value=$period[COURSE_PERIOD_ID]$selected>".PeriodSelect($period)."</OPTION>";
 	}
 	$period_select .= "</SELECT>";
 	if(!$found)

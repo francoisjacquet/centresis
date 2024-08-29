@@ -22,9 +22,8 @@ if ($_REQUEST['modfunc']=='submit')
 			$items_RET = DBGet(DBQuery("SELECT DESCRIPTION,SHORT_NAME,PRICE,PRICE_REDUCED,PRICE_FREE FROM FOOD_SERVICE_ITEMS WHERE SCHOOL_ID='".UserSchool()."'"),array(),array('SHORT_NAME'));
 
 			// get next transaction id
-			//$id = DBGet(DBQuery("SELECT ".db_nextval('FOOD_SERVICE_TRANSACTIONS')." AS SEQ_ID ".FROM_DUAL));
-			//$id = $id[1]['SEQ_ID'];
-			$id = db_nextval('FOOD_SERVICE_TRANSACTIONS');
+			$id = DBGet(DBQuery("SELECT ".db_seq_nextval('FOOD_SERVICE_TRANSACTIONS_SEQ')." AS SEQ_ID ".FROM_DUAL));
+			$id = $id[1]['SEQ_ID'];
 
 			$item_id = 0;
 			foreach($_SESSION['FSA_sale'] as $item_sn)
@@ -43,8 +42,8 @@ if ($_REQUEST['modfunc']=='submit')
 					else
 						$discount = '';
 
-				$fields = 'TRANSACTION_ID,AMOUNT,DISCOUNT,SHORT_NAME,DESCRIPTION';
-				$values = "'".$id."','-".$price."','".$discount."','".$items_RET[$item_sn][1]['SHORT_NAME']."','".$items_RET[$item_sn][1]['DESCRIPTION']."'";
+				$fields = 'ITEM_ID,TRANSACTION_ID,AMOUNT,DISCOUNT,SHORT_NAME,DESCRIPTION';
+				$values = "'".$item_id++."','".$id."','-".$price."','".$discount."','".$items_RET[$item_sn][1]['SHORT_NAME']."','".$items_RET[$item_sn][1]['DESCRIPTION']."'";
 				$sql = "INSERT INTO FOOD_SERVICE_TRANSACTION_ITEMS (".$fields.") values (".$values.")";
 				DBQuery($sql);
 			}
@@ -53,9 +52,7 @@ if ($_REQUEST['modfunc']=='submit')
 			$fields = 'TRANSACTION_ID,ACCOUNT_ID,STUDENT_ID,SYEAR,SCHOOL_ID,DISCOUNT,BALANCE,TIMESTAMP,SHORT_NAME,DESCRIPTION,SELLER_ID';
 			$values = "'".$id."','".$student['ACCOUNT_ID']."','".UserStudentID()."','".UserSyear()."','".UserSchool()."','".$discount."',(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID='".$student['ACCOUNT_ID']."'),CURRENT_TIMESTAMP,'".$menus_RET[$_REQUEST['menu_id']][1]['TITLE']."','".$menus_RET[$_REQUEST['menu_id']][1]['TITLE'].' - '.DBDate()."','".User('STAFF_ID')."'";
 			$sql2 = "INSERT INTO FOOD_SERVICE_TRANSACTIONS (".$fields.") values (".$values.")";
-			//DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT');
-			DBQuery($sql1);
-			DBQuery($sql2);
+			DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; COMMIT');
 
 			unset($_SESSION['FSA_sale']);
 		}
@@ -68,7 +65,7 @@ if ($_REQUEST['modfunc']=='submit')
 
 if(UserStudentID() && !$_REQUEST['modfunc'])
 {
-	$student = DBGet(DBQuery("SELECT s.STUDENT_ID,CONCAT(".(Preferences('NAME')=='Common'?'coalesce(s.CUSTOM_200000002,s.FIRST_NAME)':'s.FIRST_NAME').",' ',s.LAST_NAME) AS FULL_NAME,fsa.ACCOUNT_ID,fsa.STATUS,fsa.DISCOUNT,fsa.BARCODE,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE FROM STUDENTS s,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID='".UserStudentID()."' AND fsa.STUDENT_ID=s.STUDENT_ID"));
+	$student = DBGet(DBQuery("SELECT s.STUDENT_ID,".(Preferences('NAME')=='Common'?'coalesce(s.CUSTOM_200000002,s.FIRST_NAME)':'s.FIRST_NAME')."||' '||s.LAST_NAME AS FULL_NAME,fsa.ACCOUNT_ID,fsa.STATUS,fsa.DISCOUNT,fsa.BARCODE,(SELECT BALANCE FROM FOOD_SERVICE_ACCOUNTS WHERE ACCOUNT_ID=fsa.ACCOUNT_ID) AS BALANCE FROM STUDENTS s,FOOD_SERVICE_STUDENT_ACCOUNTS fsa WHERE s.STUDENT_ID='".UserStudentID()."' AND fsa.STUDENT_ID=s.STUDENT_ID"));
 	$student = $student[1];
 
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=submit&menu_id=$_REQUEST[menu_id] method=POST>";
@@ -96,11 +93,9 @@ if(UserStudentID() && !$_REQUEST['modfunc'])
 		ListOutput($RET,$columns,$singular,$plural,$link,false,array('save'=>false,'search'=>false));
 
 		// IMAGE
-		if($file = @fopen($picture=$StudentPicturesPath.'/'.UserSyear().'/'.UserStudentID().'.JPG','r') || $file = @fopen($picture=$StudentPicturesPath.'/'.(UserSyear()-1).'/'.UserStudentID().'.JPG','r'))
-		{
-			fclose($file);
-			echo '<TD rowspan=2 width=150 align=left><IMG SRC="'.$picture.'" width=150></TD>';
-		}
+        $picture_path = FindPicture('student', UserStudentID());
+        if (!empty($picture_path))
+			echo '<TD rowspan=2 width=150 align=left><IMG SRC="'.$picture_path.'" width=150></TD>';
 
 		echo '</TD></TR>';
 		echo '<TR><TD width=100% valign=top>';

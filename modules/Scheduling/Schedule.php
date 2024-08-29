@@ -10,8 +10,8 @@ if($_REQUEST['month_date'] && $_REQUEST['day_date'] && $_REQUEST['year_date'])
 		$_REQUEST['day_date']--;
 else
 {
-	$min_date = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS MIN_DATE FROM attendance_calendar WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
-	if($min_date[1]['MIN_DATE'] && DBDate('mysql')<$min_date[1]['MIN_DATE'])
+	$min_date = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS MIN_DATE FROM ATTENDANCE_CALENDAR WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
+	if($min_date[1]['MIN_DATE'] && DBDate('postgres')<$min_date[1]['MIN_DATE'])
 	{
 		$date = $min_date[1]['MIN_DATE'];
 		$_REQUEST['day_date'] = date('d',strtotime($date));
@@ -63,12 +63,7 @@ if($_REQUEST['schedule'] && $_POST['schedule'])
 
 		foreach($columns as $column=>$value)
 		{
-			if($column=="START_DATE" || $column=="END_DATE"):
-				//check if date has value or just N/A
-				$sql .= ($value!="") ? $column."='".str_replace("\'","''",date("Y-m-d", strtotime($value)))."'," : $column."='',";
-			else:
-				$sql .= $column."='".str_replace("\'","''",$value)."',";
-			endif;
+			$sql .= $column."='".str_replace("\'","''",$value)."',";
 		}
 		$sql = substr($sql,0,-1) . " WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."' AND START_DATE='".$start_date."'";
 		DBQuery($sql);
@@ -83,10 +78,10 @@ if($_REQUEST['schedule'] && $_POST['schedule'])
 				DBQuery("DELETE FROM GRADEBOOK_GRADES WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."'");
 				DBQuery("DELETE FROM STUDENT_REPORT_CARD_GRADES WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."'");
 				DBQuery("DELETE FROM STUDENT_REPORT_CARD_COMMENTS WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."'");
-				DBQuery("DELETE FROM attendance_period WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."'");
+				DBQuery("DELETE FROM ATTENDANCE_PERIOD WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."'");
 			}
 			else
-				DBQuery("DELETE FROM attendance_period WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."' AND (".($columns['START_DATE']?"SCHOOL_DATE<'".$columns['START_DATE']."'":'FALSE').' OR '.($columns['END_DATE']?"SCHOOL_DATE>'".$columns['END_DATE']."'":'FALSE').")");
+				DBQuery("DELETE FROM ATTENDANCE_PERIOD WHERE STUDENT_ID='".UserStudentID()."' AND COURSE_PERIOD_ID='".$course_period_id."' AND (".($columns['START_DATE']?"SCHOOL_DATE<'".$columns['START_DATE']."'":'FALSE').' OR '.($columns['END_DATE']?"SCHOOL_DATE>'".$columns['END_DATE']."'":'FALSE').")");
 		}
 	}
 	unset($_SESSION['_REQUEST_vars']['schedule']);
@@ -96,7 +91,7 @@ if($_REQUEST['schedule'] && $_POST['schedule'])
 if(UserStudentID() && $_REQUEST['modfunc']!='choose_course')
 {
 	echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=modify METHOD=POST>";
-	DrawHeader(PrepareDate(date("Y-m-d", strtotime($date)),'_date',false,array('submit'=>true)).' '.CheckBoxOnclick('include_inactive')._('Include Inactive Courses').(AllowEdit()?' '.CheckBoxOnclick('include_seats')._('Show Open Seats'):''),SubmitButton(_('Save')));
+	DrawHeader(PrepareDate($date,'_date',false,array('submit'=>true)).' '.CheckBoxOnclick('include_inactive')._('Include Inactive Courses').(AllowEdit()?' '.CheckBoxOnclick('include_seats')._('Show Open Seats'):''),SubmitButton(_('Save')));
 	DrawHeader(ProgramLink('Scheduling/PrintSchedules.php',_('Print Schedule'),'&modfunc=save&st_arr[]='.UserStudentID().'&_CENTRE_PDF=true'));
 	/*
 	$schedule_fields_RET = DBGet(DBQuery("SELECT cf.TITLE,s.CUSTOM_71 FROM CUSTOM_FIELDS cf,STUDENTS s WHERE s.STUDENT_ID='".UserStudentID()."' AND cf.ID='71'"));
@@ -111,7 +106,7 @@ if(UserStudentID() && $_REQUEST['modfunc']!='choose_course')
 	$sql = "SELECT
 				s.COURSE_ID,s.COURSE_PERIOD_ID,
 				s.MARKING_PERIOD_ID,s.START_DATE,s.END_DATE,
-				UNIX_TIMESTAMP(s.START_DATE) AS START_EPOCH,UNIX_TIMESTAMP(s.END_DATE) AS END_EPOCH,sp.PERIOD_ID,
+				extract(EPOCH FROM s.START_DATE) AS START_EPOCH,extract(EPOCH FROM s.END_DATE) AS END_EPOCH,sp.PERIOD_ID,
 				cp.PERIOD_ID,cp.MARKING_PERIOD_ID AS COURSE_MARKING_PERIOD_ID,cp.MP,cp.CALENDAR_ID,cp.TOTAL_SEATS,
 				c.TITLE,cp.COURSE_PERIOD_ID AS PERIOD_PULLDOWN,
 				s.STUDENT_ID,ROOM,DAYS,SCHEDULER_LOCK
@@ -124,7 +119,7 @@ if(UserStudentID() && $_REQUEST['modfunc']!='choose_course')
 				AND s.SYEAR='".UserSyear()."'
 				AND s.SCHOOL_ID = '".UserSchool()."'";
 	if($_REQUEST['include_inactive']!='Y')
-		$sql .= " AND ('".date("Y-m-d", strtotime($date))."' BETWEEN s.START_DATE AND s.END_DATE OR (s.END_DATE IS NULL AND s.START_DATE<='".date("Y-m-d", strtotime($date))."')) ";
+		$sql .= " AND ('".$date."' BETWEEN s.START_DATE AND s.END_DATE OR (s.END_DATE IS NULL AND s.START_DATE<='".$date."')) ";
 	$sql .= " ORDER BY sp.SORT_ORDER,s.MARKING_PERIOD_ID";
 
 	$QI = DBQuery($sql);
@@ -152,6 +147,7 @@ if(UserStudentID() && $_REQUEST['modfunc']!='choose_course')
 		unset($extra);
 		$_REQUEST['modname'] = 'Scheduling/Schedule.php';
         $_REQUEST['student_id'] = UserStudentID();
+        $_REQUEST['stuid'] = UserStudentID();
 		$_REQUEST['search_modfunc'] = 'list';
 		$_REQUEST['include_seats'] = $include_seats;
 		$extra['link']['FULL_NAME']['link'] = "Modules.php?modname=$_REQUEST[modname]&modfunc=choose_course";
@@ -168,8 +164,8 @@ if($_REQUEST['modfunc']=='choose_course')
 		include "modules/Scheduling/Courses.php";
 	else
 	{
-		//$min_date = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS MIN_DATE FROM attendance_calendar WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
-		//if($min_date[1]['MIN_DATE'] && DBDate('mysql')<$min_date[1]['MIN_DATE'])
+		//$min_date = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS MIN_DATE FROM ATTENDANCE_CALENDAR WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
+		//if($min_date[1]['MIN_DATE'] && DBDate('postgres')<$min_date[1]['MIN_DATE'])
 		//	$date = $min_date[1]['MIN_DATE'];
 		//else
 		//	$date = DBDate();
@@ -217,36 +213,17 @@ if($_REQUEST['modfunc']=='choose_course')
 			$warnings[] = _('There is already a course scheduled in that period.');
 
 		if(!$warnings)
-		{ $date = DBDate();
+		{
 			DBQuery("INSERT INTO SCHEDULE (SYEAR,SCHOOL_ID,STUDENT_ID,START_DATE,COURSE_ID,COURSE_PERIOD_ID,MP,MARKING_PERIOD_ID) values('".UserSyear()."','".UserSchool()."','".UserStudentID()."','".$date."','".$_REQUEST['course_id']."','".$_REQUEST['course_period_id']."','".$mp_RET[1]['MP']."','".$mp_RET[1]['MARKING_PERIOD_ID']."')");
-			echo "<script language=javascript>opener.document.location = 'Modules.php?modname=$_REQUEST[modname]&year_date=$_REQUEST[year_date]&month_date=$_REQUEST[month_date]&day_date=$_REQUEST[day_date]&time=".time()."'; window.close();</script>"; 
-			unset($date);
-
-			if($MoodleActive) { 
-				global $token;
-				$csperiod_id = $_REQUEST['course_id'];
-				$csuser_id = get_centre_moodle_studentid( UserStudentID() );
-				$cscourse_id = get_centre_moodle_courseid( $csperiod_id );
-				$role_id = STUDENT_ROLE_ID;
-				enrol( $csuser_id, $cscourse_id, $role_id, $token );
-			}			
+			echo "<script language=javascript>opener.document.location = 'Modules.php?modname=$_REQUEST[modname]&year_date=$_REQUEST[year_date]&month_date=$_REQUEST[month_date]&day_date=$_REQUEST[day_date]&time=".time()."'; window.close();</script>";
 		}
-		elseif($warnings)
-		{ $date = DBDate();
+		else
+		{
 			if(Prompt(_('Confirm'),_('There is a conflict.').' '._('Are you sure you want to add this section?'),ErrorMessage($warnings,'note')))
-			{ 
+			{
 				DBQuery("INSERT INTO SCHEDULE (SYEAR,SCHOOL_ID,STUDENT_ID,START_DATE,COURSE_ID,COURSE_PERIOD_ID,MP,MARKING_PERIOD_ID) values('".UserSyear()."','".UserSchool()."','".UserStudentID()."','".$date."','".$_REQUEST['course_id']."','".$_REQUEST['course_period_id']."','".$mp_RET[1]['MP']."','".$mp_RET[1]['MARKING_PERIOD_ID']."')");
-				echo "<script language=javascript>opener.document.location = 'Modules.php?modname=$_REQUEST[modname]&year_date=$_REQUEST[year_date]&month_date=$_REQUEST[month_date]&day_date=$_REQUEST[day_date]&time=".time()."'; window.close();</script>"; 
-
-			if($MoodleActive) { 
-				global $token;
-				$csperiod_id = $_REQUEST['course_id'];
-				$csuser_id = get_centre_moodle_studentid( UserStudentID() );
-				$cscourse_id = get_centre_moodle_courseid( $csperiod_id );
-				$role_id = STUDENT_ROLE_ID;
-				enrol( $csuser_id, $cscourse_id, $role_id, $token );
-			}			
-			} unset($date);
+				echo "<script language=javascript>opener.document.location = 'Modules.php?modname=$_REQUEST[modname]&year_date=$_REQUEST[year_date]&month_date=$_REQUEST[month_date]&day_date=$_REQUEST[day_date]&time=".time()."'; window.close();</script>";
+			}
 		}
 	}
 }
@@ -322,7 +299,7 @@ function calcSeats0($period,$date)
 {
 	$mp = $period['MARKING_PERIOD_ID'];
 
-	$seats = DBGet(DBQuery("SELECT max((SELECT count(1) FROM SCHEDULE ss JOIN STUDENT_ENROLLMENT sem ON (sem.STUDENT_ID=ss.STUDENT_ID AND sem.SYEAR=ss.SYEAR) WHERE ss.COURSE_PERIOD_ID='$period[COURSE_PERIOD_ID]' AND (ss.MARKING_PERIOD_ID='$mp' OR ss.MARKING_PERIOD_ID IN (".GetAllMP(GetMP($mp,'MP'),$mp).")) AND (ac.SCHOOL_DATE>=ss.START_DATE AND (ss.END_DATE IS NULL OR ac.SCHOOL_DATE<=ss.END_DATE)) AND (ac.SCHOOL_DATE>=sem.START_DATE AND (sem.END_DATE IS NULL OR ac.SCHOOL_DATE<=sem.END_DATE)))) AS FILLED_SEATS FROM attendance_calendar ac WHERE ac.CALENDAR_ID='$period[CALENDAR_ID]' AND ac.SCHOOL_DATE BETWEEN ".($date?"'$date'":db_case(array("(CURRENT_DATE>'".GetMP($mp,'END_DATE')."')",'TRUE',"'".GetMP($mp,'START_DATE')."'",'CURRENT_DATE')))." AND '".GetMP($mp,'END_DATE')."'"));
+	$seats = DBGet(DBQuery("SELECT max((SELECT count(1) FROM SCHEDULE ss JOIN STUDENT_ENROLLMENT sem ON (sem.STUDENT_ID=ss.STUDENT_ID AND sem.SYEAR=ss.SYEAR) WHERE ss.COURSE_PERIOD_ID='$period[COURSE_PERIOD_ID]' AND (ss.MARKING_PERIOD_ID='$mp' OR ss.MARKING_PERIOD_ID IN (".GetAllMP(GetMP($mp,'MP'),$mp).")) AND (ac.SCHOOL_DATE>=ss.START_DATE AND (ss.END_DATE IS NULL OR ac.SCHOOL_DATE<=ss.END_DATE)) AND (ac.SCHOOL_DATE>=sem.START_DATE AND (sem.END_DATE IS NULL OR ac.SCHOOL_DATE<=sem.END_DATE)))) AS FILLED_SEATS FROM ATTENDANCE_CALENDAR ac WHERE ac.CALENDAR_ID='$period[CALENDAR_ID]' AND ac.SCHOOL_DATE BETWEEN ".($date?"'$date'":db_case(array("(CURRENT_DATE>'".GetMP($mp,'END_DATE')."')",'TRUE',"'".GetMP($mp,'START_DATE')."'",'CURRENT_DATE')))." AND '".GetMP($mp,'END_DATE')."'"));
 	return $seats[1]['FILLED_SEATS'];
 }
 

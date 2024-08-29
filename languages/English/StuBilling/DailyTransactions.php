@@ -54,7 +54,7 @@ if($_REQUEST['modfunc']=='list')
 	{
 		case 'stubillingcredits':
 		// STUBILLING CREDITS
-		$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT sba,STUDENTS s ";
+		$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT sba,STUDENTS s ";
 		if($_REQUEST['sch'])
 			$sql .= ",STU_SCHOOL_MEETS ssm WHERE ssm.SYEAR=sba.SYEAR AND ssm.STUDENT_ID=sba.STUDENT_ID AND ssm.SCHOOL='$_REQUEST[sch]' AND s.STUDENT_ID=ssm.STUDENT_ID AND ";
 		else
@@ -64,7 +64,7 @@ if($_REQUEST['modfunc']=='list')
 
 		case 'stubillingdebits':
 		// STUBILLING CREDITS
-		$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_FEES sba,STUDENTS s ";
+		$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_FEES sba,STUDENTS s ";
 		if($_REQUEST['sch'])
 			$sql .= ",STU_SCHOOL_MEETS ssm WHERE ssm.SYEAR=sba.SYEAR AND ssm.STUDENT_ID=sba.STUDENT_ID AND ssm.SCHOOL='$_REQUEST[sch]' AND s.STUDENT_ID=ssm.STUDENT_ID AND ";
 		else
@@ -74,7 +74,7 @@ if($_REQUEST['modfunc']=='list')
 
 		case 'stubillingwaived debits':
 		// STUBILLING CREDITS
-		$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) as FULL_NAME,sba.STUDENT_ID,sum('0'-AMOUNT) as AMOUNT FROM STU_BILLING_FEES sba,STUDENTS s ";
+		$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME as FULL_NAME,sba.STUDENT_ID,sum('0'-AMOUNT) as AMOUNT FROM STU_BILLING_FEES sba,STUDENTS s ";
 		if($_REQUEST['sch'])
 			$sql .= ",STU_SCHOOL_MEETS ssm WHERE ssm.SYEAR=sba.SYEAR AND ssm.STUDENT_ID=sba.STUDENT_ID AND ssm.SCHOOL='$_REQUEST[sch]' AND s.STUDENT_ID=ssm.STUDENT_ID AND ";
 		else
@@ -84,7 +84,7 @@ if($_REQUEST['modfunc']=='list')
 
 		case 'lunchcredits':
 		// STUBILLING CREDITS
-		$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT sba,STUDENTS s ";
+		$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT sba,STUDENTS s ";
 		if($_REQUEST['sch'])
 			$sql .= ",STU_SCHOOL_MEETS ssm WHERE ssm.SYEAR=sba.SYEAR AND ssm.STUDENT_ID=sba.STUDENT_ID AND ssm.SCHOOL='$_REQUEST[sch]' AND s.STUDENT_ID=ssm.STUDENT_ID AND ";
 		else
@@ -94,7 +94,7 @@ if($_REQUEST['modfunc']=='list')
 
 		case 'lunchdebits':
 		// STUBILLING CREDITS
-		$sql = "SELECT CONCAT(s.LAST_NAME,', ',s.FIRST_NAME) as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT_LUNCH sba,STUDENTS s ";
+		$sql = "SELECT s.LAST_NAME||', '||s.FIRST_NAME as FULL_NAME,sba.STUDENT_ID,sum(AMOUNT) as AMOUNT FROM STU_BILLING_ACT_LUNCH sba,STUDENTS s ";
 		if($_REQUEST['sch'])
 			$sql .= ",STU_SCHOOL_MEETS ssm WHERE ssm.SYEAR=sba.SYEAR AND ssm.STUDENT_ID=sba.STUDENT_ID AND ssm.SCHOOL='$_REQUEST[sch]' AND s.STUDENT_ID=ssm.STUDENT_ID AND ";
 		else

@@ -9,6 +9,8 @@ $help = array('emergency'=>array('off'=>'Receive all communications','on'=>'For 
 echo '<FIELDSET><LEGEND><FONT color=gray>'._('Phone Information').'</FONT></LEGEND>';
 echo '<TABLE cellpadding=5 width=100%>';
 for ($i=0;$i<4;$i++) {
+    echo '<tr><td width=36 valign=top>'.FlagInput($this_contact['PHONE_'.($i+1).'_FLAGS'],'values[PEOPLE][PHONE_'.($i+1).'_FLAGS]','E','emergency',$help['emergency']);
+    echo FlagInput($this_contact['PHONE_'.($i+1).'_FLAGS'],'values[PEOPLE][PHONE_'.($i+1).'_FLAGS]','P','private',$help['private']).'</td>';
     echo '<td>'.TextInput($this_contact['PHONE_'.($i+1)],'values[PEOPLE][PHONE_'.($i+1).']',$label['PHONE'][$i]).'</td></tr>';    
 }
 echo '</TABLE>';
@@ -17,6 +19,8 @@ echo '</FIELDSET>';
 echo '<FIELDSET><LEGEND><FONT color=gray>'._('Email Information').'</FONT></LEGEND>';
 echo '<TABLE cellpadding=5 width=100%>';
 for ($i=0;$i<4;$i++) {
+    echo '<tr><td width=36 valign=top>'.FlagInput($this_contact['EMAIL_'.($i+1).'_FLAGS'],'values[PEOPLE][EMAIL_'.($i+1).'_FLAGS]','E','emergency',$help['emergency']);
+    echo FlagInput($this_contact['EMAIL_'.($i+1).'_FLAGS'],'values[PEOPLE][EMAIL_'.($i+1).'_FLAGS]','P','private',$help['private']).'</td>';
     echo '<td>'.TextInput($this_contact['EMAIL_'.($i+1)],'values[PEOPLE][EMAIL_'.($i+1).']',$label['EMAIL'][$i]).'</td></tr>';    
 }
 echo '</TABLE>';

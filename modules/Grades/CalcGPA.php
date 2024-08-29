@@ -33,36 +33,8 @@ $go = Prompt(_('GPA Calculation'),_('Calculate GPA and Class Rank'),$table);
 if($go)
 {
 	DBQuery("SELECT calc_cum_gpa_mp('".$_REQUEST['marking_period_id']."')");
-    $s_rank = DBGet(DBQuery("SELECT mp.syear, se.student_id AS STUDENT_ID,
-    (SELECT count(*)+1 
-       FROM student_mp_stats sgm3
-       WHERE sgm3.cum_cr_weighted_factor > sgm.cum_cr_weighted_factor
-         AND sgm3.marking_period_id = mp.marking_period_id 
-         AND sgm3.student_id in (select distinct sgm2.student_id 
-                FROM student_mp_stats sgm2, student_enrollment se2
-                WHERE sgm2.student_id = se2.student_id 
-                    AND sgm2.marking_period_id = mp.marking_period_id 
-                    AND se2.grade_id = se.grade_id
-                    AND se2.syear = se.syear)
-    ) AS rank
-    FROM student_enrollment se, student_mp_stats sgm, marking_periods mp
-    
-    WHERE 
-    se.student_id = sgm.student_id
-    AND sgm.marking_period_id = mp.marking_period_id
-    AND mp.marking_period_id = '".$_REQUEST['marking_period_id']."'
-    AND se.syear = mp.syear
-    AND NOT sgm.cum_cr_weighted_factor is null
-    ORDER BY grade_id, rank "));
-	$cs_rank = $s_rank[1][rank];
-	$stud_id = $s_rank[1][STUDENT_ID];
-
-    $rank = DBGet(DBQuery("SELECT set_class_rank_mp('".$_REQUEST['marking_period_id']."')"));
-	//print_r($rank);
-	foreach($rank[1] as $key=>$val):
-		$the_rank = $val;
-	endforeach;
-	DBQuery("UPDATE STUDENT_GPA_CALCULATED SET CLASS_RANK='$the_rank' WHERE STUDENT_ID='$stud_id' AND MARKING_PERIOD_ID='".$_REQUEST['marking_period_id']."'");
+    DBQuery("SELECT set_class_rank_mp('".$_REQUEST['marking_period_id']."')");
+	DBQuery("UPDATE STUDENT_GPA_CALCULATED SET CLASS_RANK='$rank' WHERE STUDENT_ID='$student[STUDENT_ID]' AND MARKING_PERIOD_ID='".$_REQUEST['marking_period_id']."'");
 	unset($_REQUEST['delete_ok']);
 	DrawHeader('<IMG SRC=assets/check.gif>'.sprintf(_('GPA and class rank for %s has been calculated.'),GetMP($_REQUEST['marking_period_id'])));
 	Prompt(_('GPA Calculation'),_('Calculate GPA and Class Rank'),$table);

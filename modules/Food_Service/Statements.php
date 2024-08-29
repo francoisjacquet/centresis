@@ -1,25 +1,25 @@
 <?php
 
 if($_REQUEST['day_start'] && $_REQUEST['month_start'] && $_REQUEST['year_start'])
-	while(!VerifyDate($start_date = $_REQUEST['year_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['day_start']))
+	while(!VerifyDate($start_date = $_REQUEST['day_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['year_start']))
 		$_REQUEST['day_start']--;
 else
 {
 	$_REQUEST['day_start'] = '01';
-	$_REQUEST['month_start'] = strtoupper(date('m'));
-	$_REQUEST['year_start'] = date('Y');
-	$start_date = $_REQUEST['year_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['day_start'];
+	$_REQUEST['month_start'] = strtoupper(date('M'));
+	$_REQUEST['year_start'] = date('y');
+	$start_date = $_REQUEST['day_start'].'-'.$_REQUEST['month_start'].'-'.$_REQUEST['year_start'];
 }
 
 if($_REQUEST['day_end'] && $_REQUEST['month_end'] && $_REQUEST['year_end'])
-	while(!VerifyDate($end_date = $_REQUEST['year_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['day_end']))
+	while(!VerifyDate($end_date = $_REQUEST['day_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['year_end']))
 		$_REQUEST['day_end']--;
 else
 {
 	$_REQUEST['day_end'] = date('d');
-	$_REQUEST['month_end'] = strtoupper(date('m'));
-	$_REQUEST['year_end'] = date('Y');
-	$end_date = $_REQUEST['year_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['day_end'];
+	$_REQUEST['month_end'] = strtoupper(date('M'));
+	$_REQUEST['year_end'] = date('y');
+	$end_date = $_REQUEST['day_end'].'-'.$_REQUEST['month_end'].'-'.$_REQUEST['year_end'];
 }
 
 if($_REQUEST['type'])
@@ -53,7 +53,7 @@ if($_REQUEST['modfunc']=='delete')
 		{
 			require_once('modules/Food_Service/includes/DeleteTransactionItem.fnc.php');
 			DeleteTransactionItem($_REQUEST['transaction_id'],$_REQUEST['item_id'],$_REQUEST['type']);
-			//DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; '.$sql3.'; COMMIT');
+			DBQuery('BEGIN; '.$sql1.'; '.$sql2.'; '.$sql3.'; COMMIT');
 			unset($_REQUEST['modfunc']);
 			unset($_REQUEST['delete_ok']);
 			unset($_SESSION['_REQUEST_vars']['modfunc']);

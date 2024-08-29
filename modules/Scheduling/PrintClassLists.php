@@ -5,16 +5,16 @@ if($_REQUEST['modfunc']=='save')
 	{
 	$cp_list = '\''.implode('\',\'',$_REQUEST['cp_arr']).'\'';
 
-	$extra['DATE'] = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS START_DATE FROM attendance_calendar WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
+	$extra['DATE'] = DBGet(DBQuery("SELECT min(SCHOOL_DATE) AS START_DATE FROM ATTENDANCE_CALENDAR WHERE SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
 	$extra['DATE'] = $extra['DATE'][1]['START_DATE'];
-	if(!$extra['DATE'] || DBDate('mysql')>$extra['DATE'])
+	if(!$extra['DATE'] || DBDate('postgres')>$extra['DATE'])
 		$extra['DATE'] = DBDate();
 
 	// get the fy marking period id, there should be exactly one fy marking period
 	$fy_id = DBGet(DBQuery("SELECT MARKING_PERIOD_ID FROM SCHOOL_MARKING_PERIODS WHERE MP='FY' AND SYEAR='".UserSyear()."' AND SCHOOL_ID='".UserSchool()."'"));
 	$fy_id = $fy_id[1]['MARKING_PERIOD_ID'];
 
-	$course_periods_RET = DBGet(DBQuery("SELECT cp.TITLE,cp.COURSE_PERIOD_ID,cp.PERIOD_ID,cp.MARKING_PERIOD_ID,cp.MP,cp.DAYS,c.TITLE AS COURSE_TITLE,cp.TEACHER_ID,(SELECT CONCAT(LAST_NAME,', ',FIRST_NAME) FROM staff WHERE STAFF_ID=cp.TEACHER_ID) AS TEACHER FROM COURSE_PERIODS cp,COURSES c WHERE c.COURSE_ID=cp.COURSE_ID AND cp.COURSE_PERIOD_ID IN ($cp_list) ORDER BY TEACHER"));
+	$course_periods_RET = DBGet(DBQuery("SELECT cp.TITLE,cp.COURSE_PERIOD_ID,cp.PERIOD_ID,cp.MARKING_PERIOD_ID,cp.MP,cp.DAYS,c.TITLE AS COURSE_TITLE,cp.TEACHER_ID,(SELECT LAST_NAME||', '||FIRST_NAME FROM STAFF WHERE STAFF_ID=cp.TEACHER_ID) AS TEACHER FROM COURSE_PERIODS cp,COURSES c WHERE c.COURSE_ID=cp.COURSE_ID AND cp.COURSE_PERIOD_ID IN ($cp_list) ORDER BY TEACHER"));
 
 	$first_extra = $extra;
 	$handle = PDFStart();
@@ -77,7 +77,7 @@ if(!$_REQUEST['modfunc'])
 		echo "<FORM action=Modules.php?modname=$_REQUEST[modname]&modfunc=$_REQUEST[modfunc]&search_modfunc=list&next_modname=$_REQUEST[next_modname] method=POST>";
 		echo '<TABLE border=0>';
 
-		$RET = DBGet(DBQuery("SELECT STAFF_ID,CONCAT(LAST_NAME,', ',FIRST_NAME) AS FULL_NAME FROM staff WHERE PROFILE='teacher' AND (SCHOOLS IS NULL OR position(',".UserSchool().",' IN SCHOOLS)>0) AND SYEAR='".UserSyear()."' ORDER BY FULL_NAME"));
+		$RET = DBGet(DBQuery("SELECT STAFF_ID,LAST_NAME||', '||FIRST_NAME AS FULL_NAME FROM STAFF WHERE PROFILE='teacher' AND (SCHOOLS IS NULL OR position(',".UserSchool().",' IN SCHOOLS)>0) AND SYEAR='".UserSyear()."' ORDER BY FULL_NAME"));
 		echo '<TR><TD align=right width=120>Teacher</TD><TD>';
 		echo "<SELECT name=teacher_id style='max-width:250;'><OPTION value=''>"._('N/A')."</OPTION>";
 		foreach($RET as $teacher)
@@ -121,7 +121,7 @@ function mySearch($extra)
 	DrawHeader($extra['extra_header_left'],$extra['extra_header_right']);
 	echo '<TABLE>'.$extra['extra_search'].'</TABLE>';
 
-	$sql = "SELECT CONCAT('<INPUT type=checkbox name=cp_arr[] value=',cp.COURSE_PERIOD_ID,'>') AS CHECKBOX,cp.TITLE FROM COURSE_PERIODS cp";
+	$sql = "SELECT '<INPUT type=checkbox name=cp_arr[] value='||cp.COURSE_PERIOD_ID||'>' AS CHECKBOX,cp.TITLE FROM COURSE_PERIODS cp";
 	if(User('PROFILE')=='admin')
 	{
 		if($_REQUEST['teacher_id'])
